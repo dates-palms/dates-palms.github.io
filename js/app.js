@@ -38,6 +38,7 @@
         state.weatherClient = new WeatherAPIClient(IMS_API_TOKEN, { disableProxy, apiBase });
 
         setupNavigation();
+        setupMobileMenu();
         setupTabs();
         setupAgeToggle();
         setupAnalyzeButton();
@@ -169,10 +170,48 @@
         });
     }
 
+    function setupMobileMenu() {
+        const toggleBtn = $('#mobile-menu-toggle');
+        const backdrop = $('#mobile-menu-backdrop');
+        if (!toggleBtn || !backdrop) return;
+
+        const closeMenu = () => {
+            document.body.classList.remove('mobile-menu-open');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+        };
+
+        const openMenu = () => {
+            document.body.classList.add('mobile-menu-open');
+            toggleBtn.setAttribute('aria-expanded', 'true');
+        };
+
+        toggleBtn.addEventListener('click', () => {
+            if (document.body.classList.contains('mobile-menu-open')) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        });
+
+        backdrop.addEventListener('click', closeMenu);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeMenu();
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 800) closeMenu();
+        });
+    }
+
     function navigateTo(page) {
         state.currentPage = page;
         $$('.sidebar-nav a').forEach(a => a.classList.toggle('active', a.dataset.page === page));
         $$('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + page));
+        // close mobile menu after selecting a page
+        document.body.classList.remove('mobile-menu-open');
+        const toggleBtn = $('#mobile-menu-toggle');
+        if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
     }
 
     // ================================================================
