@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="AI-powered decision support system for date palm yield prediction using XGBoost machine learning.">
+    <!-- base tag helps GitHub Pages and project sites resolve relative links correctly -->
+    <base href="./">
+    <title>Date Palm Yield Prediction — Model 1A</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/volcani_logo.png" type="image/png">
+</head>
+
+<body>
+
+    <!-- ============================================================
+     SPLASH SCREEN
+     ============================================================ -->
+    <div id="splash-overlay">
+        <canvas id="splash-canvas"></canvas>
+        <div class="splash-content">
+            <img src="assets/volcani_logo.png" alt="Volcani Logo" class="splash-logo">
+            <div class="splash-title">Date Palm Decision Support</div>
+            <div class="splash-subtitle">Volcani Center — ARO · XGBoost Model 1A</div>
+            <div class="splash-progress">
+                <div class="splash-progress-bar"></div>
+            </div>
+            <div class="splash-status">Initializing...</div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+     SIDEBAR
+     ============================================================ -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-row">
+                <img src="assets/volcani_logo.png" alt="Logo">
+                <h1>Date Palm<br>Yield Prediction</h1>
+            </div>
+            <div class="version">v5.0 — XGBoost Model 1A</div>
+            <div id="model-badge" class="model-badge loading">
+                <span class="dot"></span> Loading model...
+            </div>
+        </div>
+        <ul class="sidebar-nav">
+            <li><a href="#" data-page="home" class="active"><span class="icon">🏠</span> Home</a></li>
+            <li><a href="#" data-page="data-entry"><span class="icon">📝</span> Data Entry</a></li>
+            <li><a href="#" data-page="results"><span class="icon">📊</span> Results &amp; Analysis</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <p>Volcani Center — ARO<br>&copy; 2026 All rights reserved</p>
+        </div>
+    </aside>
+
+    <!-- ============================================================
+     MAIN CONTENT
+     ============================================================ -->
+    <main class="main-content">
+
+        <!-- ========== HOME PAGE ========== -->
+        <section class="page active" id="page-home">
+            <img src="assets/volcani_logo.png" alt="Volcani Center Logo" class="home-logo">
+            <h2 class="page-title" style="text-align:center;">🏠 Welcome to the Decision Support System</h2>
+            <p class="page-subtitle" style="text-align:center;">An advanced AI tool for informed decision-making in date
+                palm pruning and thinning.</p>
+
+            <div class="card">
+                <h3 class="card-title">How to use the system?</h3>
+                <div class="steps-grid">
+                    <div class="step-item">
+                        <div class="step-icon step-1">1</div>
+                        <div class="step-text">
+                            <h3>Step 1: Data Entry</h3>
+                            <p>Go to the <strong>Data Entry</strong> page. Fill in the tree age, thinning protocol
+                                (general or by generation), and the climate data for each physiological period.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-icon step-2">2</div>
+                        <div class="step-text">
+                            <h3>Step 2: Smart Analysis</h3>
+                            <p>After filling all fields, click the <strong>"Analyze &amp; Generate Prediction"</strong>
+                                button. The system will process your data using an XGBoost model with 2000 decision
+                                trees.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-icon step-3">3</div>
+                        <div class="step-text">
+                            <h3>Step 3: Get Results</h3>
+                            <p>The system will display a yield prediction distribution chart with confidence intervals.
+                                Use this to guide your thinning decisions at the April–May decision node.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== DATA ENTRY PAGE ========== -->
+        <section class="page" id="page-data-entry">
+            <h2 class="page-title">📝 Data Entry and Thinning Protocol</h2>
+            <p class="page-subtitle">Fill in the following data to receive a yield prediction (Model 1A — April–May
+                decision node).</p>
+
+            <div class="data-entry-grid">
+
+                <!-- LEFT: Weather Data from IMS API -->
+                <div class="card">
+                    <h3 class="card-title">☁️ Climate Data — Meteorological Station</h3>
+                    <p style="font-size:13px;color:#6B7280;margin-bottom:16px;">
+                        Select a meteorological station and load historical weather data.
+                        The system will automatically compute the required features for the model.
+                    </p>
+
+                    <!-- Station Selector -->
+                    <div class="form-group">
+                        <label>� Meteorological Station</label>
+                        <select id="station-select" disabled>
+                            <option value="">Loading stations...</option>
+                        </select>
+                        <p style="font-size:12px;color:#6B7280;margin-top:4px;">
+                            <a href="#" id="manual-entry-link">Enter weather features manually</a>
+                        </p>
+                    </div>
+
+                    <!-- Load Button -->
+                    <button id="btn-load-weather" class="btn btn-weather" disabled>
+                        📡 Load Weather Data
+                    </button>
+
+                    <!-- Loading Status -->
+                    <div id="weather-status" class="weather-status" style="display:none;">
+                        <span id="weather-spinner" class="spinner">⏳</span>
+                        <span id="weather-status-text">Loading...</span>
+                    </div>
+
+                    <!-- Computed Features Display -->
+                    <div id="weather-features-display" class="weather-features-display" style="display:none;">
+                        <div class="weather-feature-header">✅ Weather Features Loaded</div>
+                        <div class="weather-features-grid">
+                            <div class="weather-period-summary">
+                                <h4>📅 Differentiation<br><small>(Nov–Feb)</small></h4>
+                                <div class="feature-value"><span class="feature-label">Heat Hours</span> <span
+                                        id="feat-t-inf">—</span></div>
+                                <div class="feature-value"><span class="feature-label">Avg Humidity</span> <span
+                                        id="feat-h-inf">—</span></div>
+                                <div class="feature-value"><span class="feature-label">Evaporation</span> <span
+                                        id="feat-e-inf">—</span></div>
+                            </div>
+                            <div class="weather-period-summary">
+                                <h4>🌸 Flowering<br><small>(Feb–Mar)</small></h4>
+                                <div class="feature-value"><span class="feature-label">Heat Hours</span> <span
+                                        id="feat-t-flow">—</span></div>
+                                <div class="feature-value"><span class="feature-label">Avg Humidity</span> <span
+                                        id="feat-h-flow">—</span></div>
+                                <div class="feature-value"><span class="feature-label">Evaporation</span> <span
+                                        id="feat-e-flow">—</span></div>
+                            </div>
+                            <div class="weather-period-summary">
+                                <h4>✂️ Thinning<br><small>(Apr–May)</small></h4>
+                                <div class="feature-value"><span class="feature-label">Heat Hours</span> <span
+                                        id="feat-t-thin">—</span></div>
+                                <div class="feature-value"><span class="feature-label">Avg Humidity</span> <span
+                                        id="feat-h-thin">—</span></div>
+                                <div class="feature-value"><span class="feature-label">Evaporation</span> <span
+                                        id="feat-e-thin">—</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- manual weather input fallback -->
+                    <div id="manual-weather-container" class="manual-weather" style="display:none;margin-top:12px;padding:12px;border:1px dashed #9CA3AF;">
+                        <h4 style="margin-top:0;">🛠️ Manual Weather Features</h4>
+                        <p style="font-size:13px;color:#6B7280;">If automatic download fails you can input the pre‑computed features manually and then click <strong>Apply</strong>.</p>
+                        <div class="form-group">
+                            <label>Heat Hours (Differentiation)</label>
+                            <input type="number" id="manual-t-inf" step="0.1" placeholder="e.g., 120">
+                        </div>
+                        <div class="form-group">
+                            <label>Avg Humidity (Differentiation) %</label>
+                            <input type="number" id="manual-h-inf" step="0.1" placeholder="e.g., 45">
+                        </div>
+                        <div class="form-group">
+                            <label>Evaporation (Differentiation) mm</label>
+                            <input type="number" id="manual-e-inf" step="0.1" placeholder="e.g., 15">
+                        </div>
+                        <div class="form-group">
+                            <label>Heat Hours (Flowering)</label>
+                            <input type="number" id="manual-t-flow" step="0.1" placeholder="e.g., 80">
+                        </div>
+                        <div class="form-group">
+                            <label>Avg Humidity (Flowering) %</label>
+                            <input type="number" id="manual-h-flow" step="0.1" placeholder="e.g., 50">
+                        </div>
+                        <div class="form-group">
+                            <label>Evaporation (Flowering) mm</label>
+                            <input type="number" id="manual-e-flow" step="0.1" placeholder="e.g., 12">
+                        </div>
+                        <div class="form-group">
+                            <label>Heat Hours (Thinning)</label>
+                            <input type="number" id="manual-t-thin" step="0.1" placeholder="e.g., 90">
+                        </div>
+                        <div class="form-group">
+                            <label>Avg Humidity (Thinning) %</label>
+                            <input type="number" id="manual-h-thin" step="0.1" placeholder="e.g., 55">
+                        </div>
+                        <div class="form-group">
+                            <label>Evaporation (Thinning) mm</label>
+                            <input type="number" id="manual-e-thin" step="0.1" placeholder="e.g., 10">
+                        </div>
+                        <div class="btn-center">
+                            <button id="btn-manual-weather-done" class="btn btn-weather">Apply Manual Features</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Tree Details + Thinning Protocol -->
+                <div class="card">
+                    <h3 class="card-title">🌴 Tree Details and Thinning Protocol</h3>
+
+                    <!-- Age Input Group -->
+                    <div
+                        style="background:#F8FAFC;border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid #E5E7EB;">
+                        <div style="font-weight:700;margin-bottom:10px;font-size:14px;">Tree Age</div>
+                        <div class="radio-group">
+                            <label><input type="radio" name="age-mode" value="age" checked> Enter Age</label>
+                            <label><input type="radio" name="age-mode" value="year"> Enter Planting Year</label>
+                        </div>
+                        <div id="age-direct">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <input type="number" id="input-age" placeholder="Age in years (e.g., 8)" min="1"
+                                    max="100">
+                                <div class="error-msg">Please enter a valid tree age.</div>
+                            </div>
+                        </div>
+                        <div id="age-year" style="display:none;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <input type="number" id="input-planting-year" placeholder="Planting year (e.g., 2018)"
+                                    min="1950" max="2026">
+                                <div class="error-msg">Please enter a valid planting year.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Protocol Tabs -->
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="general">General Protocol</button>
+                        <button class="tab-btn" data-tab="generation">By Generation Protocol</button>
+                    </div>
+
+                    <!-- General Protocol Tab -->
+                    <div class="tab-content active" id="tab-general">
+                        <div class="form-group">
+                            <label>Avg. strands per bunch</label>
+                            <input type="number" id="gen-branches" placeholder="e.g., 25" min="1" max="100">
+                            <div class="error-msg">Required.</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Avg. fruitlets per strand</label>
+                            <input type="number" id="gen-fronds" placeholder="e.g., 120" min="10" max="300">
+                            <div class="error-msg">Required.</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Total bunches</label>
+                            <input type="number" id="gen-clusters" placeholder="e.g., 8" min="1" max="500">
+                            <div class="error-msg">Required.</div>
+                        </div>
+                    </div>
+
+                    <!-- By Generation Protocol Tab -->
+                    <div class="tab-content" id="tab-generation">
+                        <div class="form-group">
+                            <label>Number of bunches</label>
+                            <input type="number" id="byg-clusters" placeholder="e.g., 8" min="1" max="500">
+                            <div class="error-msg">Required.</div>
+                        </div>
+
+                        <div class="section-label">🔼 Upper Generation</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Strands per bunch</label>
+                                <input type="number" id="byg-upper-branches" placeholder="e.g., 22" min="1" max="100">
+                                <div class="error-msg">Required.</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Fruitlets per strand</label>
+                                <input type="number" id="byg-upper-fronds" placeholder="e.g., 110" min="10" max="300">
+                                <div class="error-msg">Required.</div>
+                            </div>
+                        </div>
+
+                        <div class="section-label">▶️ Middle Generation</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Strands per bunch</label>
+                                <input type="number" id="byg-middle-branches" placeholder="e.g., 25" min="1" max="100">
+                                <div class="error-msg">Required.</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Fruitlets per strand</label>
+                                <input type="number" id="byg-middle-fronds" placeholder="e.g., 120" min="10" max="300">
+                                <div class="error-msg">Required.</div>
+                            </div>
+                        </div>
+
+                        <div class="section-label">🔽 Lower Generation</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Strands per bunch</label>
+                                <input type="number" id="byg-lower-branches" placeholder="e.g., 28" min="1" max="100">
+                                <div class="error-msg">Required.</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Fruitlets per strand</label>
+                                <input type="number" id="byg-lower-fronds" placeholder="e.g., 130" min="10" max="300">
+                                <div class="error-msg">Required.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analyze Button -->
+                    <div class="btn-center">
+                        <button id="btn-analyze" class="btn btn-analyze" disabled>
+                            ⏳ Loading Model...
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== RESULTS PAGE ========== -->
+        <section class="page" id="page-results">
+            <div class="results-placeholder">
+                <div class="icon">📊</div>
+                <p>Enter data on the previous page and click "Analyze" to see results here.</p>
+            </div>
+
+            <div class="results-content">
+                <h2 class="page-title">📊 Analysis Results and Yield Prediction — Model 1A</h2>
+                <p class="page-subtitle">Yield prediction (kg/tree) at decision node (April–May) based on XGBoost</p>
+
+                <div class="card">
+                    <h3 class="card-title">🎯 Yield Prediction Distribution (XGBoost Model 1A)</h3>
+                    <div class="chart-container">
+                        <canvas id="chart-canvas"></canvas>
+                    </div>
+                    <div class="summary-row">
+                        <div class="summary-box">
+                            <div class="prediction-value" id="prediction-value">—</div>
+                        </div>
+                        <div class="summary-box">
+                            <div class="confidence-text" id="confidence-text">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card feature-summary" style="margin-top:24px;">
+                    <h3 class="card-title">📋 Input Features Summary</h3>
+                    <table class="feature-table">
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feature-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/weather-api.js"></script>
+    <script src="js/xgboost-predictor.js"></script>
+    <script src="js/data-processor.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+
+</html>
