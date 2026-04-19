@@ -53,29 +53,35 @@
              HOME PAGE
              ====================================================== -->
         <section class="page active" id="page-home">
-            <div class="home-hero">
-                <img src="assets/volcani_logo.png" alt="Volcani Institute Logo" class="home-logo">
-                <h1 id="home-heading" data-live-text="What would you like to predict?"></h1>
-                <p id="home-subtitle" class="home-copy" data-live-text="Powered by machine learning to turn data into agricultural forecasts."></p>
-            </div>
+            <video id="home-bg-video" autoplay muted loop playsinline>
+                <source src="assets/yehuda_video.mp4" type="video/mp4">
+            </video>
+            <div id="home-bg-overlay"></div>
+            <div class="home-glass-panel">
+                <div class="home-hero">
+                    <img src="assets/volcani_logo.png" alt="Volcani Institute Logo" class="home-logo">
+                    <h1 id="home-heading" data-live-text="What would you like to predict?"></h1>
+                    <p id="home-subtitle" class="home-copy" data-live-text="Powered by machine learning to turn data into agricultural forecasts."></p>
+                </div>
 
-            <div class="home-grid">
-                <button class="home-card" data-target="yield">
-                    <span class="home-card-icon material-symbols-outlined">park</span>
-                    <div class="home-card-title">Tree yield (kg)</div>
-                    <p>Use the tree-only model for fast performance when climate inputs are not available.</p>
-                    <span class="home-card-cta">
-                        Get started <span class="material-symbols-outlined">arrow_forward</span>
-                    </span>
-                </button>
-                <button class="home-card" data-target="skin">
-                    <span class="home-card-icon material-symbols-outlined">wb_sunny</span>
-                    <div class="home-card-title">Skin separation distribution</div>
-                    <p>Use the climate-aware model for distribution prediction with weather station data.</p>
-                    <span class="home-card-cta">
-                        Get started <span class="material-symbols-outlined">arrow_forward</span>
-                    </span>
-                </button>
+                <div class="home-grid">
+                    <button class="home-card" data-target="yield">
+                        <span class="home-card-icon material-symbols-outlined">park</span>
+                        <div class="home-card-title">Tree yield (kg)</div>
+                        <p>Physiology-based model leveraging crop data and canopy metrics.</p>
+                        <span class="home-card-cta">
+                            Get started <span class="material-symbols-outlined">arrow_forward</span>
+                        </span>
+                    </button>
+                    <button class="home-card" data-target="skin">
+                        <span class="home-card-icon material-symbols-outlined">wb_sunny</span>
+                        <div class="home-card-title">Skin separation distribution</div>
+                        <p>Climate data-based model</p>
+                        <span class="home-card-cta">
+                            Get started <span class="material-symbols-outlined">arrow_forward</span>
+                        </span>
+                    </button>
+                </div>
             </div>
         </section>
 

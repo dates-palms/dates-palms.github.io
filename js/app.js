@@ -135,7 +135,7 @@
                 const alpha = 0.4 + 0.3 * Math.sin(n.pulse);
                 ctx.beginPath();
                 ctx.arc(n.x, n.y, n.size, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(96, 165, 250, ${alpha})`;
+                ctx.fillStyle = `rgba(125, 211, 252, ${alpha})`;
                 ctx.fill();
             }
             for (const [i, j] of connections) {
@@ -147,7 +147,7 @@
                     ctx.beginPath();
                     ctx.moveTo(nodes[i].x, nodes[i].y);
                     ctx.lineTo(nodes[j].x, nodes[j].y);
-                    ctx.strokeStyle = `rgba(96, 165, 250, ${alpha})`;
+                    ctx.strokeStyle = `rgba(125, 211, 252, ${alpha})`;
                     ctx.lineWidth = 1;
                     ctx.stroke();
                 }
@@ -693,7 +693,7 @@
         }
         ctx.lineTo(sx(mean + 2 * std), sy(0));
         ctx.closePath();
-        ctx.fillStyle = 'rgba(96, 165, 250, 0.15)';
+        ctx.fillStyle = 'rgba(125, 211, 252, 0.15)';
         ctx.fill();
 
         // 68% fill
@@ -707,7 +707,7 @@
         }
         ctx.lineTo(sx(mean + std), sy(0));
         ctx.closePath();
-        ctx.fillStyle = 'rgba(96, 165, 250, 0.35)';
+        ctx.fillStyle = 'rgba(125, 211, 252, 0.35)';
         ctx.fill();
 
         // Curve
@@ -716,7 +716,7 @@
         for (let i = 1; i < points.length; i++) {
             ctx.lineTo(sx(points[i].x), sy(points[i].y));
         }
-        ctx.strokeStyle = '#3B82F6';
+        ctx.strokeStyle = '#7DD3FC';
         ctx.lineWidth = 2.5;
         ctx.stroke();
 
@@ -754,9 +754,9 @@
         const legendX = W - margin.right - 200;
         const legendY = margin.top + 10;
         const legendItems = [
-            { color: '#3B82F6', label: 'Yield Distribution' },
-            { color: 'rgba(96,165,250,0.55)', label: '68% Confidence', fill: true },
-            { color: 'rgba(96,165,250,0.25)', label: '95% Confidence', fill: true },
+            { color: '#7DD3FC', label: 'Yield Distribution' },
+            { color: 'rgba(125, 211, 252, 0.55)', label: '68% Confidence', fill: true },
+            { color: 'rgba(125, 211, 252, 0.25)', label: '95% Confidence', fill: true },
             { color: '#F59E0B', label: `Predicted: ${mean.toFixed(1)} kg` },
         ];
         ctx.font = '11px Inter, sans-serif';
