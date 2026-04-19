@@ -406,8 +406,8 @@ body {
     align-items: flex-start;
     padding: 30px 28px 24px;
     border-radius: var(--radius);
-    border: 1.5px solid rgba(255, 255, 255, 0.42);
-    background: rgba(255, 255, 255, 0.36);
+    border: 1.5px solid rgba(255, 255, 255, 0.26);
+    background: rgba(255, 255, 255, 0.18);
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
     transition: var(--transition);
     text-align: left;
