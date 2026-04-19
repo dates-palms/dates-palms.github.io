@@ -214,47 +214,6 @@ body {
 .page#page-home {
     position: relative;
     overflow: hidden;
-    background:
-        radial-gradient(circle at 26% 20%, rgba(59, 130, 246, 0.08), transparent 24%),
-        radial-gradient(circle at 82% 16%, rgba(16, 185, 129, 0.07), transparent 20%),
-        radial-gradient(circle at 50% 82%, rgba(251, 191, 36, 0.06), transparent 28%);
-}
-
-.page#page-home::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-        radial-gradient(circle at 13% 22%, rgba(59, 130, 246, 0.6), transparent 10%),
-        radial-gradient(circle at 78% 18%, rgba(16, 185, 129, 0.48), transparent 10%),
-        radial-gradient(circle at 34% 70%, rgba(249, 115, 22, 0.42), transparent 12%),
-        radial-gradient(circle at 55% 46%, rgba(168, 85, 247, 0.38), transparent 11%),
-        radial-gradient(circle at 68% 62%, rgba(56, 189, 248, 0.34), transparent 10%);
-    filter: blur(28px);
-    opacity: 0.95;
-    pointer-events: none;
-    z-index: 0;
-    animation: aiGlowMove 18s ease-in-out infinite;
-}
-
-.page#page-home::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-        radial-gradient(circle at 16% 14%, rgba(255,255,255,0.8) 2px, transparent 2px),
-        radial-gradient(circle at 88% 22%, rgba(255,255,255,0.6) 1.8px, transparent 1.8px),
-        radial-gradient(circle at 48% 68%, rgba(255,255,255,0.56) 1.8px, transparent 1.8px),
-        radial-gradient(circle at 34% 54%, rgba(255,255,255,0.5) 1.6px, transparent 1.6px),
-        linear-gradient(115deg, rgba(255,255,255,0.12) 1px, transparent 1px),
-        linear-gradient(45deg, rgba(255,255,255,0.12) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 150px 150px, 150px 150px;
-    background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0;
-    opacity: 0.85;
-    pointer-events: none;
-    z-index: 0;
-    animation: gridShift 18s linear infinite, lineFade 6s ease-in-out infinite alternate;
-    mix-blend-mode: screen;
 }
 
 .page#page-home .home-hero,
@@ -262,23 +221,6 @@ body {
 .page#page-home .card {
     position: relative;
     z-index: 1;
-}
-
-@keyframes aiGlowMove {
-    0%, 100% { transform: translate(0, 0); }
-    25% { transform: translate(16px, -12px); }
-    50% { transform: translate(32px, -18px); }
-    75% { transform: translate(-18px, 12px); }
-}
-
-@keyframes gridShift {
-    0% { background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0; }
-    100% { background-position: 0 0, 0 0, 0 0, 0 0, 90px 90px, -90px -90px; }
-}
-
-@keyframes lineFade {
-    from { opacity: 0.7; }
-    to { opacity: 1; }
 }
 
 @keyframes fadeIn {
