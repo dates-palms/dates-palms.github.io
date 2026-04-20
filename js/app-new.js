@@ -9,7 +9,7 @@
             title: 'Predict Tree Yield (kg)',
             description: 'Predict tree yield in kilograms without climate data.',
             modelUrl: 'model/rf_model_Model1_DropRows_Thinning_(1A)%20No%20Climate.js',
-            lateModelUrl: 'model/xgboost_late_count_Model1_DropRows_Coverage_1B_NoClimate.js',
+            lateModelUrl: 'model/fixed_xgboost_late_count_Model1_DropRows_Coverage_1B_NoClimate.js',
             requiresClimate: false,
             resultType: 'yield',
         },
