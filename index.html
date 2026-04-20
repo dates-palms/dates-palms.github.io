@@ -104,7 +104,7 @@
             <div class="card">
                 <h3 class="card-title">
                     <span class="material-symbols-outlined btn-icon">agriculture</span>
-                    Tree Details and Thinning Protocol / Counts
+                    Tree Details and Thinning Protocol/Counts
                 </h3>
 
                 <!-- Tree Age block -->
@@ -134,17 +134,25 @@
                     </div>
                 </div>
 
-                <!-- Tabs -->
-                <div class="tabs">
-                    <button class="tab-btn active" data-tab="general">
-                        <span class="material-symbols-outlined btn-icon">tune</span>General Protocol
-                    </button>
-                    <button class="tab-btn" data-tab="generation">
-                        <span class="material-symbols-outlined btn-icon">account_tree</span>Protocol by whorl
-                    </button>
+                <div class="yield-thinning-controls">
+                    <div class="yield-thinning-title">Thinning Protocol</div>
+
+                    <div class="radio-group yield-mode-row">
+                        <label><input type="radio" name="yield-input-mode" value="protocol" checked> Protocol</label>
+                        <label><input type="radio" name="yield-input-mode" value="counting"> Counts</label>
+                    </div>
+
+                    <div class="radio-group yield-submode-row" id="yield-protocol-options">
+                        <label><input type="radio" name="yield-protocol-mode" value="general" checked> General Protocol</label>
+                        <label><input type="radio" name="yield-protocol-mode" value="generation"> Protocol by whorl</label>
+                    </div>
+
+                    <div class="radio-group yield-submode-row" id="yield-counting-options" style="display:none;">
+                        <label><input type="radio" name="yield-counting-mode" value="early" checked> Early counts</label>
+                        <label><input type="radio" name="yield-counting-mode" value="late"> Late counts</label>
+                    </div>
                 </div>
 
-                <!-- General Protocol tab -->
                 <div class="tab-content active" id="tab-general">
                     <div class="form-group">
                         <label>
@@ -172,7 +180,6 @@
                     </div>
                 </div>
 
-                <!-- Protocol by whorl tab -->
                 <div class="tab-content" id="tab-generation">
                     <div class="form-group">
                         <label>
@@ -442,6 +449,8 @@
     <script src="js/weather-api.js?v=20260420"></script>
     <script src="js/xgboost-predictor.js?v=20260420"></script>
     <script src="js/data-processor.js?v=20260420"></script>
+    <script src="js/yield-mode.js?v=20260420"></script>
+    <script src="js/skin-mode.js?v=20260420"></script>
     <script src="js/app-new.js?v=20260420"></script>
 
 </body>

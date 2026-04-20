@@ -49,6 +49,7 @@
         setupPageButtons();
         setupHomeCards();
         setupTabs();
+        setupYieldControls();
         setupAgeToggle();
         setupWeatherControls();
         setupManualWeatherControls();
@@ -231,6 +232,14 @@
                 if (year) year.style.display = isAge ? 'none' : 'block';
             });
         });
+    }
+
+    function setupYieldControls() {
+        const page = $('#page-yield');
+        if (!page) return;
+        if (window.YieldMode && typeof window.YieldMode.init === 'function') {
+            window.YieldMode.init(page);
+        }
     }
 
     function setupWeatherControls() {
@@ -433,14 +442,28 @@
             const pageSection = $('#page-' + pageKey);
             if (!pageSection) throw new Error('Page not found.');
 
-            const treeAge = getTreeAge(pageSection);
-            const protocolType = getActiveProtocol(pageSection);
-            const thinning = getThinningData(pageSection, protocolType);
             const currentYear = new Date().getFullYear();
             let features;
+            let treeAge;
+            let protocolType;
+            let thinning;
+            let yieldScenario = 'early_counting';
 
             if (pageKey === 'skin') {
                 if (!state.weatherFeatures) throw new Error('Please load climate data before starting the prediction.');
+
+                const baseInputs = window.SkinMode && typeof window.SkinMode.getBaseInputs === 'function'
+                    ? window.SkinMode.getBaseInputs()
+                    : {
+                        treeAge: 8,
+                        protocolType: 'general',
+                        thinning: { branches: 25, fronds: 120, clusters: 8 },
+                    };
+
+                treeAge = baseInputs.treeAge;
+                protocolType = baseInputs.protocolType;
+                thinning = baseInputs.thinning;
+
                 features = state.processor.prepareInputVector({
                     treeAge,
                     year: currentYear,
@@ -449,6 +472,13 @@
                     weather: state.weatherFeatures,
                 });
             } else {
+                treeAge = getTreeAge(pageSection);
+                protocolType = getActiveProtocol(pageSection);
+                thinning = getThinningData(pageSection, protocolType);
+                if (window.YieldMode && typeof window.YieldMode.getScenario === 'function') {
+                    yieldScenario = window.YieldMode.getScenario(pageSection);
+                }
+
                 features = state.processor.prepareInputVector({
                     treeAge,
                     year: currentYear,
@@ -475,7 +505,7 @@
                 stdYield = meanYield * 0.20;
             }
 
-            state.lastPrediction = { meanYield, stdYield, features };
+            state.lastPrediction = { meanYield, stdYield, features, yieldScenario };
             navigateTo('results');
             showToast('Prediction generated successfully.', 'success');
         } catch (err) {
@@ -497,6 +527,9 @@
     }
 
     function getActiveProtocol(page) {
+        if (window.YieldMode && typeof window.YieldMode.getProtocolType === 'function') {
+            return window.YieldMode.getProtocolType(page);
+        }
         return page.querySelector('.tab-btn.active')?.dataset.tab === 'general' ? 'general' : 'by_generation';
     }
 

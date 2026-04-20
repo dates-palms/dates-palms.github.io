@@ -726,6 +726,31 @@ body {
 
 .helper-text a:hover { text-decoration: underline; }
 
+.yield-thinning-controls {
+    padding: 6px 0 14px;
+}
+
+.yield-thinning-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.yield-mode-row {
+    margin-bottom: 10px;
+}
+
+.yield-submode-row {
+    margin-bottom: 14px;
+}
+
+.yield-submode-row label {
+    font-weight: 600;
+}
+
 /* ================================================================
    Tabs — pill style
    ================================================================ */
