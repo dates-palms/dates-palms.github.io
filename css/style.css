@@ -43,6 +43,53 @@
 
 .hero-banner { display: none !important; }
 
+.dev-ribbon {
+    pointer-events: none;
+    position: fixed;
+    top: 16px;
+    left: -60px;
+    z-index: 2200;
+    width: 280px;
+    transform: rotate(-45deg);
+    background: rgba(206, 58, 58, 0.94);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 72px;
+    padding: 0 0;
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.18);
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    font-family: var(--font-body);
+    line-height: 1.1;
+    transform-origin: center;
+}
+
+.dev-ribbon span {
+    display: block;
+    width: 100%;
+}
+
+.dev-ribbon small {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.7rem;
+    font-weight: 400;
+    opacity: 0.88;
+}
+
+@media (max-width: 980px) {
+    .dev-ribbon {
+        width: 230px;
+        top: 10px;
+        left: -54px;
+        font-size: 0.85rem;
+    }
+}
+
 html { font-size: 16px; scroll-behavior: smooth; }
 
 body {
