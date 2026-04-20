@@ -8,6 +8,8 @@ class XGBoostPredictor {
         this.featureNames = [];
         this.baseScore = 0.5; // default
         this.trees = [];
+        this.modelFormat = 'learner';
+        this.boostLearningRate = 1;
         this.loaded = false;
     }
 
@@ -18,7 +20,21 @@ class XGBoostPredictor {
         try {
             const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            this.model = await response.json();
+
+            const rawText = await response.text();
+            let parsedModel = null;
+
+            try {
+                parsedModel = JSON.parse(rawText);
+            } catch {
+                const match = rawText.match(/const\s+XGB_MODEL\s*=\s*([\s\S]*?);\s*$/);
+                if (!match) {
+                    throw new Error('Unsupported XGBoost model format');
+                }
+                parsedModel = Function(`return (${match[1]});`)();
+            }
+
+            this.model = parsedModel;
             this._parseModel();
             this.loaded = true;
             console.log(`✅ XGBoost model loaded: ${this.trees.length} trees, ${this.featureNames.length} features`);
@@ -33,7 +49,23 @@ class XGBoostPredictor {
      * Parse the model JSON structure
      */
     _parseModel() {
+        if (this.model?.learner) {
+            this._parseLearnerModel();
+            return;
+        }
+
+        if (this.model?.type === 'xgboost' && Array.isArray(this.model?.trees)) {
+            this._parseCompactModel();
+            return;
+        }
+
+        throw new Error('Unknown XGBoost model structure');
+    }
+
+    _parseLearnerModel() {
         const learner = this.model.learner;
+        this.modelFormat = 'learner';
+        this.boostLearningRate = 1;
 
         // Extract feature names
         this.featureNames = learner.feature_names || [];
@@ -60,6 +92,23 @@ class XGBoostPredictor {
         this.trees = gbtree.trees || [];
 
         console.log(`Model info: base_score=${this.baseScore}, trees=${this.trees.length}, features=${this.featureNames.join(', ')}`);
+    }
+
+    _parseCompactModel() {
+        this.modelFormat = 'compact';
+        this.featureNames = Array.isArray(this.model.feature_names) ? [...this.model.feature_names] : [];
+        this.baseScore = Number(this.model.base_score);
+        if (!Number.isFinite(this.baseScore)) {
+            this.baseScore = 0;
+        }
+
+        this.boostLearningRate = Number(this.model.learning_rate);
+        if (!Number.isFinite(this.boostLearningRate)) {
+            this.boostLearningRate = 1;
+        }
+
+        this.trees = Array.isArray(this.model.trees) ? [...this.model.trees] : [];
+        console.log(`Compact model info: base_score=${this.baseScore}, lr=${this.boostLearningRate}, trees=${this.trees.length}`);
     }
 
     /**
@@ -99,6 +148,30 @@ class XGBoostPredictor {
         }
     }
 
+    _traverseCompactTree(node, features) {
+        let current = node;
+
+        while (current && typeof current.v !== 'number') {
+            const featureIndex = current.f;
+            const threshold = current.t;
+            const value = features[featureIndex];
+
+            if (value === null || value === undefined || Number.isNaN(value)) {
+                current = current.l;
+            } else if (value < threshold) {
+                current = current.l;
+            } else {
+                current = current.r;
+            }
+        }
+
+        if (!current || typeof current.v !== 'number') {
+            throw new Error('Invalid compact XGBoost tree structure');
+        }
+
+        return current.v;
+    }
+
     /**
      * Predict yield from a feature vector (array of 16 numbers in model feature order)
      */
@@ -112,12 +185,18 @@ class XGBoostPredictor {
         }
 
         // Sum leaf values from all trees
-        let sum = this.baseScore;
+        let treeSum = 0;
         for (const tree of this.trees) {
-            sum += this._traverseTree(tree, featureVector);
+            treeSum += this.modelFormat === 'compact'
+                ? this._traverseCompactTree(tree, featureVector)
+                : this._traverseTree(tree, featureVector);
         }
 
-        return sum;
+        if (this.modelFormat === 'compact') {
+            return this.baseScore + (this.boostLearningRate * treeSum);
+        }
+
+        return this.baseScore + treeSum;
     }
 
     /**

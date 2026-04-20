@@ -8,7 +8,8 @@
             key: 'yield',
             title: 'Predict Tree Yield (kg)',
             description: 'Predict tree yield in kilograms without climate data.',
-            modelUrl: 'model/xgboost_yield_model_1a.json',
+            modelUrl: 'model/rf_model_Model1_DropRows_Thinning_(1A)%20No%20Climate.js',
+            lateModelUrl: 'model/xgboost_late_count_Model1_DropRows_Coverage_1B_NoClimate.js',
             requiresClimate: false,
             resultType: 'yield',
         },
@@ -42,9 +43,12 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
         state.processor = new DataProcessor();
-        state.predictors.yield = new XGBoostPredictor();
+        state.predictors.yieldEarly = new RFPredictor();
+        state.predictors.yieldLate = new XGBoostPredictor();
         state.predictors.skin = new XGBoostPredictor();
         state.weatherClient = new WeatherAPIClient(IMS_API_TOKEN, { disableProxy: false });
+
+        await initializeModels();
 
         setupPageButtons();
         setupHomeCards();
@@ -58,6 +62,16 @@
 
         loadStations();
     });
+
+    async function initializeModels() {
+        const yieldEarlyLoaded = await state.predictors.yieldEarly.loadModel(MODEL_CONFIGS.yield.modelUrl);
+        const yieldLateLoaded = await state.predictors.yieldLate.loadModel(MODEL_CONFIGS.yield.lateModelUrl);
+        state.modelLoaded.yieldEarly = yieldEarlyLoaded;
+        state.modelLoaded.yieldLate = yieldLateLoaded;
+        state.modelLoaded.yield = yieldEarlyLoaded && yieldLateLoaded;
+        state.modelLoaded.skin = false;
+        updateModelStatus();
+    }
 
     function updateModelStatus() {
         const badge = $('#model-status');
@@ -479,25 +493,21 @@
                     yieldScenario = window.YieldMode.getScenario(pageSection);
                 }
 
-                features = state.processor.prepareInputVector({
-                    treeAge,
-                    year: currentYear,
-                    protocolType,
-                    thinning,
-                    weather: {},
-                });
-                Object.keys(features).forEach(key => {
-                    if (key.startsWith('T_') || key.startsWith('H_') || key.startsWith('E_')) {
-                        features[key] = 0;
-                    }
-                });
+                features = buildYieldFeatureObject(treeAge, protocolType, thinning, yieldScenario);
             }
 
             let meanYield, stdYield;
-            const modelReady = state.modelLoaded[pageKey];
+            let modelReady = state.modelLoaded[pageKey];
+            let predictor = state.predictors[pageKey];
+
+            if (pageKey === 'yield') {
+                const isLateScenario = yieldScenario === 'late_counting';
+                modelReady = isLateScenario ? state.modelLoaded.yieldLate : state.modelLoaded.yieldEarly;
+                predictor = isLateScenario ? state.predictors.yieldLate : state.predictors.yieldEarly;
+            }
 
             if (modelReady) {
-                meanYield = state.predictors[pageKey].predictFromObject(features);
+                meanYield = predictor.predictFromObject(features);
                 meanYield = Math.max(0, meanYield);
                 stdYield = Math.abs(meanYield) * 0.15;
             } else {
@@ -511,6 +521,51 @@
         } catch (err) {
             showToast(err.message, 'error');
         }
+    }
+
+    function buildYieldFeatureObject(treeAge, protocolType, thinning, yieldScenario = 'early_counting') {
+        let upperFruits;
+        let centerFruits;
+        let lowerFruits;
+        let bunches;
+
+        if (protocolType === 'general') {
+            const fruitsPerBunch = thinning.branches * thinning.fronds;
+            upperFruits = fruitsPerBunch;
+            centerFruits = fruitsPerBunch;
+            lowerFruits = fruitsPerBunch;
+            bunches = thinning.clusters;
+        } else {
+            upperFruits = thinning.upper.branches * thinning.upper.fronds;
+            centerFruits = thinning.middle.branches * thinning.middle.fronds;
+            lowerFruits = thinning.lower.branches * thinning.lower.fronds;
+            bunches = thinning.clusters;
+        }
+
+        if (yieldScenario === 'late_counting') {
+            const weightedFruitsPerBunch =
+                (0.25 * upperFruits) +
+                (0.5 * centerFruits) +
+                (0.25 * lowerFruits);
+            const totalFruitLoad = bunches * weightedFruitsPerBunch;
+
+            return {
+                'Tree age': treeAge,
+                'Coverage_Upper_Fruits Bunch-1': upperFruits,
+                'Coverage_Center_Fruits Bunch-1': centerFruits,
+                'Coverage_Lower_Fruits Bunch-1': lowerFruits,
+                'Coverage_Bunches': bunches,
+                'Coverage_Fruits Tree-1': totalFruitLoad,
+            };
+        }
+
+        return {
+            'Tree age': treeAge,
+            'Thinning_Upper_Fruits Bunch-1': upperFruits,
+            'Thinning_Center_Fruits Bunch-1': centerFruits,
+            'Thinning_Lower_Fruits Bunch-1': lowerFruits,
+            'Thinning_Bunches': bunches,
+        };
     }
 
     function getTreeAge(page) {
@@ -639,6 +694,11 @@
             'Thinning_Lower_Fruits Bunch-1': 'Lower Fruits/Bunch',
             'Thinning_Bunches': 'Total Bunches',
             'Thinning_Fruits Tree-1': 'Total Fruits/Tree',
+            'Coverage_Upper_Fruits Bunch-1': 'Coverage Upper Fruits/Bunch',
+            'Coverage_Center_Fruits Bunch-1': 'Coverage Center Fruits/Bunch',
+            'Coverage_Lower_Fruits Bunch-1': 'Coverage Lower Fruits/Bunch',
+            'Coverage_Bunches': 'Coverage Total Bunches',
+            'Coverage_Fruits Tree-1': 'Coverage Fruits/Tree',
             'T_Inf_differentiation': 'Heat Hours (Differentiation)',
             'T_Flowering': 'Heat Hours (Flowering)',
             'T_Thinning': 'Heat Hours (Thinning)',
