@@ -77,9 +77,10 @@
         const badge = $('#model-status');
         if (!badge) return;
         const statusItems = Object.entries(MODEL_CONFIGS).map(([key, cfg]) => {
-            return `${cfg.title}: ${state.modelLoaded[key] ? 'ready' : 'fallback'}`;
+            const ready = state.modelLoaded[key];
+            return `${cfg.title}: <span class="model-status-text ${ready ? 'ready' : 'fallback'}">${ready ? 'ready' : 'fallback'}</span>`;
         });
-        badge.textContent = statusItems.join(' • ');
+        badge.innerHTML = statusItems.join(' • ');
     }
 
     function setSplashStatus(message) {
@@ -516,8 +517,13 @@
             }
 
             state.lastPrediction = { meanYield, stdYield, features, yieldScenario };
-            navigateTo('results');
-            showToast('Prediction generated successfully.', 'success');
+            if (pageKey === 'yield') {
+                renderInlineYieldResults(meanYield, stdYield, features);
+                showToast('Prediction generated (inline).', 'success');
+            } else {
+                navigateTo('results');
+                showToast('Prediction generated successfully.', 'success');
+            }
         } catch (err) {
             showToast(err.message, 'error');
         }
@@ -682,7 +688,8 @@
     }
 
     function buildFeatureTable(features) {
-        const tbody = $('#feature-tbody');
+        // Prefer yield inline table if present, otherwise use global results table
+        const tbody = $('#yield-feature-tbody') || $('#feature-tbody');
         if (!tbody) return;
         tbody.innerHTML = '';
 
@@ -717,6 +724,20 @@
             row.innerHTML = `<td>${label}</td><td>${formatted}</td>`;
             tbody.appendChild(row);
         });
+    }
+
+    function renderInlineYieldResults(mean, std, features) {
+        const pane = $('#yield-results-pane');
+        const summary = $('#yield-result-summary');
+        if (summary) {
+            const valEl = summary.querySelector('.result-card-value');
+            if (valEl) valEl.textContent = `${mean.toFixed(1)} kg/tree`;
+            const capEl = summary.querySelector('.result-card-caption');
+            if (capEl) capEl.textContent = `Confidence: ${(mean - std).toFixed(1)} - ${(mean + std).toFixed(1)} kg`;
+        }
+        // populate feature table into yield pane
+        buildFeatureTable(features);
+        if (pane) pane.classList.remove('muted');
     }
 
     function showToast(message, type = '') {

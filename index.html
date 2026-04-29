@@ -101,12 +101,14 @@
                 <p class="page-subtitle">מסך ניבוי יבול</p>
             </div>
 
-            <div class="card">
+            <div class="card yield-inner-card">
                 <h3 class="card-title">
                     <span class="material-symbols-outlined btn-icon">agriculture</span>
                     Tree Details and Thinning Protocol/Counts
                 </h3>
 
+                <div class="yield-columns">
+                    <div class="yield-form-column">
                 <!-- Tree Age block -->
                 <div class="form-block">
                     <div class="form-group-inline">
@@ -122,7 +124,7 @@
 
                     <div id="age-direct">
                         <div class="form-group">
-                            <input type="number" id="input-age" placeholder="Age in years (e.g., 8)" min="1" max="100">
+                            <input type="number" id="input-age" placeholder="e.g., 8" min="1" max="100">
                             <div class="error-msg">Please enter a valid tree age.</div>
                         </div>
                     </div>
@@ -156,6 +158,14 @@
                 <div class="tab-content active" id="tab-general">
                     <div class="form-group">
                         <label>
+                            <span class="material-symbols-outlined label-icon">workspaces</span>
+                            Total bunches
+                        </label>
+                        <input type="number" id="gen-clusters" placeholder="e.g., 8" min="1" max="500">
+                        <div class="error-msg">Required.</div>
+                    </div>
+                    <div class="form-group">
+                        <label>
                             <span class="material-symbols-outlined label-icon">grain</span>
                             Avg. strands per bunch
                         </label>
@@ -168,14 +178,6 @@
                             Avg. fruitlets per strand
                         </label>
                         <input type="number" id="gen-fronds" placeholder="e.g., 120" min="10" max="300">
-                        <div class="error-msg">Required.</div>
-                    </div>
-                    <div class="form-group">
-                        <label>
-                            <span class="material-symbols-outlined label-icon">workspaces</span>
-                            Total bunches
-                        </label>
-                        <input type="number" id="gen-clusters" placeholder="e.g., 8" min="1" max="500">
                         <div class="error-msg">Required.</div>
                     </div>
                 </div>
@@ -263,7 +265,32 @@
                         Start prediction
                     </button>
                 </div>
-            </div>
+</div> <!-- .yield-form-column -->
+
+                    <aside id="yield-results-pane" class="yield-results-column muted">
+                        <div class="result-summary-compact">
+                            <h4 class="compact-title">
+                                <span class="material-symbols-outlined btn-icon">summarize</span>
+                                Prediction Summary
+                            </h4>
+                            <div id="yield-result-summary" class="result-summary">
+                                <div class="result-card-value">—</div>
+                                <div class="result-card-caption">No prediction yet — click Start prediction</div>
+                            </div>
+                        </div>
+
+                        <table class="feature-table compact-table">
+                            <thead>
+                                <tr>
+                                    <th>Feature</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="yield-feature-tbody"></tbody>
+                        </table>
+                    </aside>
+                </div> <!-- .yield-columns -->
+            </div> <!-- .card yield-inner-card -->
         </section>
 
         <!-- ======================================================
