@@ -166,9 +166,11 @@
                         <label for="yield-protocol-generation">Protocol by whorl</label>
                     </div>
 
-                    <div class="radio-group yield-submode-row" id="yield-counting-options" style="display:none;">
-                        <label><input type="radio" name="yield-counting-mode" value="early" checked> Early counts</label>
-                        <label><input type="radio" name="yield-counting-mode" value="late"> Late counts</label>
+                    <div class="radio-group yield-submode-row segmented-switch" id="yield-counting-options" style="display:none;" role="group" aria-label="Counting Type">
+                        <input type="radio" name="yield-counting-mode" id="yield-counting-early" value="early" checked>
+                        <label for="yield-counting-early">Early counts</label>
+                        <input type="radio" name="yield-counting-mode" id="yield-counting-late" value="late">
+                        <label for="yield-counting-late">Late counts</label>
                     </div>
                 </div>
 
