@@ -127,9 +127,11 @@
                             <span class="material-symbols-outlined label-icon">calendar_today</span>
                             Tree Age Input
                         </label>
-                        <div class="radio-group">
-                            <label><input type="radio" name="age-mode" value="age" checked> Enter Age</label>
-                            <label><input type="radio" name="age-mode" value="year"> Enter Planting Year</label>
+                        <div class="radio-group age-mode-switch" role="group" aria-label="Tree Age Input Mode">
+                            <input type="radio" name="age-mode" id="age-mode-age" value="age" checked>
+                            <label for="age-mode-age">Enter Age</label>
+                            <input type="radio" name="age-mode" id="age-mode-year" value="year">
+                            <label for="age-mode-year">Enter Planting Year</label>
                         </div>
                     </div>
 
@@ -150,14 +152,18 @@
                 <div class="yield-thinning-controls">
                     <div class="yield-thinning-title">Thinning Protocol</div>
 
-                    <div class="radio-group yield-mode-row">
-                        <label><input type="radio" name="yield-input-mode" value="protocol" checked> Protocol</label>
-                        <label><input type="radio" name="yield-input-mode" value="counting"> Counts</label>
+                    <div class="radio-group yield-mode-row segmented-switch" role="group" aria-label="Thinning Input Mode">
+                        <input type="radio" name="yield-input-mode" id="yield-mode-protocol" value="protocol" checked>
+                        <label for="yield-mode-protocol">Protocol</label>
+                        <input type="radio" name="yield-input-mode" id="yield-mode-counting" value="counting">
+                        <label for="yield-mode-counting">Counts</label>
                     </div>
 
-                    <div class="radio-group yield-submode-row" id="yield-protocol-options">
-                        <label><input type="radio" name="yield-protocol-mode" value="general" checked> General Protocol</label>
-                        <label><input type="radio" name="yield-protocol-mode" value="generation"> Protocol by whorl</label>
+                    <div class="radio-group yield-submode-row segmented-switch" id="yield-protocol-options" role="group" aria-label="Protocol Type">
+                        <input type="radio" name="yield-protocol-mode" id="yield-protocol-general" value="general" checked>
+                        <label for="yield-protocol-general">General Protocol</label>
+                        <input type="radio" name="yield-protocol-mode" id="yield-protocol-generation" value="generation">
+                        <label for="yield-protocol-generation">Protocol by whorl</label>
                     </div>
 
                     <div class="radio-group yield-submode-row" id="yield-counting-options" style="display:none;">

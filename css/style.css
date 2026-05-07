@@ -90,6 +90,59 @@
     }
 }
 
+/* Segmented switch for thinning protocol modes */
+.segmented-switch {
+    gap: 0;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    background: var(--background-darker);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 3px;
+    width: 100%;
+    max-width: 360px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7), inset 0 -1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.segmented-switch input[type="radio"] {
+    display: none;
+}
+
+.segmented-switch label {
+    flex: 1;
+    text-align: center;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    user-select: none;
+    border-radius: 9px;
+}
+
+.segmented-switch input[type="radio"]:checked + label {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 2px 8px rgba(45, 106, 79, 0.25);
+}
+
+.segmented-switch label:hover {
+    color: var(--primary-dark);
+}
+
+@media (max-width: 720px) {
+    .segmented-switch {
+        max-width: 100%;
+    }
+
+    .segmented-switch label {
+        padding: 6px 8px;
+        font-size: 11.5px;
+    }
+}
+
 html { font-size: 16px; scroll-behavior: smooth; }
 
 body {
@@ -750,6 +803,61 @@ body {
     accent-color: var(--primary);
     cursor: pointer;
     flex-shrink: 0;
+}
+
+/* Segmented switch for age input mode */
+.age-mode-switch {
+    gap: 0;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    background: var(--background-darker);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 3px;
+    min-width: 220px;
+    max-width: 360px;
+    width: 100%;
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7), inset 0 -1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.age-mode-switch input[type="radio"] {
+    display: none;
+}
+
+.age-mode-switch label {
+    flex: 1;
+    text-align: center;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    user-select: none;
+    border-radius: 9px;
+}
+
+.age-mode-switch input[type="radio"]:checked + label {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 2px 8px rgba(45, 106, 79, 0.25);
+}
+
+.age-mode-switch label:hover {
+    color: var(--primary-dark);
+}
+
+@media (max-width: 720px) {
+    .age-mode-switch {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .age-mode-switch label {
+        padding: 7px 8px;
+        font-size: 11.5px;
+    }
 }
 
 /* Section labels (Upper / Center / Lower Whorl) */
