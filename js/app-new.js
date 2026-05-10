@@ -99,12 +99,7 @@
         $$('.home-card').forEach(card => {
             card.addEventListener('click', () => {
                 const target = card.dataset.target;
-                // Show under-development popup for skin feature
-                if (target === 'skin') {
-                    toggleDevPopup(true);
-                } else {
-                    selectModel(target);
-                }
+                selectModel(target);
             });
         });
     }
@@ -124,23 +119,10 @@
             if (event.target === bugPopup) toggleBugPopup(false);
         });
 
-        // Dev popup handlers
-        const closeDev = $('#btn-close-dev');
-        if (closeDev) closeDev.addEventListener('click', () => toggleDevPopup(false));
-        const devPopup = $('#dev-popup');
-        if (devPopup) devPopup.addEventListener('click', (event) => {
-            if (event.target === devPopup) toggleDevPopup(false);
-        });
     }
 
     function toggleBugPopup(show) {
         const popup = $('#bug-popup');
-        if (!popup) return;
-        popup.classList.toggle('hidden', !show);
-    }
-
-    function toggleDevPopup(show) {
-        const popup = $('#dev-popup');
         if (!popup) return;
         popup.classList.toggle('hidden', !show);
     }
