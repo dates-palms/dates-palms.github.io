@@ -9,7 +9,7 @@
     <base href="./">
     <title>Mejhoul Thinning Management Decision-Support System</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0" />
-    <link rel="stylesheet" href="css/style.css?v=20260510">
+    <link rel="stylesheet" href="css/style.css?v=20260511d">
     <link rel="icon" href="assets/volcani_logo.png" type="image/png">
 </head>
 
@@ -94,7 +94,6 @@
                     <span class="material-symbols-outlined page-heading-icon">scale</span>
                     Predict Tree Yield (kg)
                 </h2>
-                <p class="page-subtitle">מסך ניבוי יבול</p>
             </div>
 
             <div class="card yield-inner-card">
@@ -114,21 +113,21 @@
                         </label>
                         <div class="radio-group age-mode-switch" role="group" aria-label="Tree Age Input Mode">
                             <input type="radio" name="age-mode" id="age-mode-age" value="age" checked>
-                            <label for="age-mode-age">Enter Age</label>
+                            <label for="age-mode-age">Age</label>
                             <input type="radio" name="age-mode" id="age-mode-year" value="year">
-                            <label for="age-mode-year">Enter Planting Year</label>
+                            <label for="age-mode-year">Planting Year</label>
                         </div>
                     </div>
 
                     <div id="age-direct">
                         <div class="form-group">
-                            <input type="number" id="input-age" placeholder="e.g., 8" min="1" max="100">
+                            <input type="number" id="input-age" placeholder="Years" min="1" max="100">
                             <div class="error-msg">Please enter a valid tree age.</div>
                         </div>
                     </div>
                     <div id="age-year" style="display:none;">
                         <div class="form-group">
-                            <input type="number" id="input-planting-year" placeholder="Planting year (e.g., 2018)" min="1950" max="2026">
+                            <input type="number" id="input-planting-year" placeholder="Year" min="1950" max="2026">
                             <div class="error-msg">Please enter a valid planting year.</div>
                         </div>
                     </div>
@@ -165,7 +164,7 @@
                             <span class="material-symbols-outlined label-icon">workspaces</span>
                             Total bunches
                         </label>
-                        <input type="number" id="gen-clusters" placeholder="e.g., 8" min="1" max="500">
+                        <input type="number" id="gen-clusters" placeholder="e.g., 20" min="1" max="500">
                         <div class="error-msg">Required.</div>
                     </div>
                     <div class="form-group">
@@ -173,7 +172,7 @@
                             <span class="material-symbols-outlined label-icon">grain</span>
                             Avg. strands per bunch
                         </label>
-                        <input type="number" id="gen-branches" placeholder="e.g., 25" min="1" max="100">
+                        <input type="number" id="gen-branches" placeholder="e.g., 50" min="1" max="100">
                         <div class="error-msg">Required.</div>
                     </div>
                     <div class="form-group">
@@ -181,7 +180,7 @@
                             <span class="material-symbols-outlined label-icon">eco</span>
                             Avg. fruitlets per strand
                         </label>
-                        <input type="number" id="gen-fronds" placeholder="e.g., 120" min="10" max="300">
+                        <input type="number" id="gen-fronds" placeholder="e.g., 8" min="10" max="300">
                         <div class="error-msg">Required.</div>
                     </div>
                 </div>
@@ -192,7 +191,7 @@
                             <span class="material-symbols-outlined label-icon">workspaces</span>
                             Number of bunches
                         </label>
-                        <input type="number" id="byg-clusters" placeholder="e.g., 8" min="1" max="500">
+                        <input type="number" id="byg-clusters" placeholder="e.g., 20" min="1" max="500">
                         <div class="error-msg">Required.</div>
                     </div>
 
@@ -205,7 +204,7 @@
                                 <span class="material-symbols-outlined label-icon">grain</span>
                                 Strands per bunch
                             </label>
-                            <input type="number" id="byg-upper-branches" placeholder="e.g., 22" min="1" max="100">
+                            <input type="number" id="byg-upper-branches" placeholder="e.g., 50" min="1" max="100">
                             <div class="error-msg">Required.</div>
                         </div>
                         <div class="form-group">
@@ -213,7 +212,7 @@
                                 <span class="material-symbols-outlined label-icon">eco</span>
                                 Fruitlets per strand
                             </label>
-                            <input type="number" id="byg-upper-fronds" placeholder="e.g., 110" min="10" max="300">
+                            <input type="number" id="byg-upper-fronds" placeholder="e.g., 8" min="10" max="300">
                             <div class="error-msg">Required.</div>
                         </div>
                     </div>
@@ -227,7 +226,7 @@
                                 <span class="material-symbols-outlined label-icon">grain</span>
                                 Strands per bunch
                             </label>
-                            <input type="number" id="byg-middle-branches" placeholder="e.g., 25" min="1" max="100">
+                            <input type="number" id="byg-middle-branches" placeholder="e.g., 50" min="1" max="100">
                             <div class="error-msg">Required.</div>
                         </div>
                         <div class="form-group">
@@ -235,7 +234,7 @@
                                 <span class="material-symbols-outlined label-icon">eco</span>
                                 Fruitlets per strand
                             </label>
-                            <input type="number" id="byg-middle-fronds" placeholder="e.g., 120" min="10" max="300">
+                            <input type="number" id="byg-middle-fronds" placeholder="e.g., 8" min="10" max="300">
                             <div class="error-msg">Required.</div>
                         </div>
                     </div>
@@ -249,7 +248,7 @@
                                 <span class="material-symbols-outlined label-icon">grain</span>
                                 Strands per bunch
                             </label>
-                            <input type="number" id="byg-lower-branches" placeholder="e.g., 28" min="1" max="100">
+                            <input type="number" id="byg-lower-branches" placeholder="e.g., 50" min="1" max="100">
                             <div class="error-msg">Required.</div>
                         </div>
                         <div class="form-group">
@@ -257,7 +256,7 @@
                                 <span class="material-symbols-outlined label-icon">eco</span>
                                 Fruitlets per strand
                             </label>
-                            <input type="number" id="byg-lower-fronds" placeholder="e.g., 130" min="10" max="300">
+                            <input type="number" id="byg-lower-fronds" placeholder="e.g., 8" min="10" max="300">
                             <div class="error-msg">Required.</div>
                         </div>
                     </div>
@@ -310,12 +309,12 @@
             </div>
 
             <!-- Climate card -->
-            <div class="card">
+                <div class="card">
                 <h3 class="card-title">
                     <span class="material-symbols-outlined btn-icon">partly_cloudy_day</span>
                     Climate Data — Meteorological Station
                 </h3>
-                <p class="card-copy">Select a station, load climate data, then start prediction.</p>
+                <p class="card-copy">Predict flow runs automatically in stages and marks each completed step.</p>
 
                 <div class="form-group">
                     <label>
@@ -325,16 +324,50 @@
                     <select id="station-select" disabled>
                         <option value="">Loading stations...</option>
                     </select>
-                    <p class="helper-text">
-                        <span class="material-symbols-outlined" style="font-size:13px;vertical-align:middle;margin-right:3px;font-variation-settings:'wght' 300;">edit_note</span>
-                        <a href="#" id="manual-entry-link">Enter weather features manually</a>
-                    </p>
                 </div>
 
-                <button id="btn-load-weather" class="btn btn-weather" disabled>
-                    <span class="material-symbols-outlined btn-icon">cloud_download</span>
-                    Load Station Data
+                <button id="btn-start-skin" class="btn btn-weather">
+                    <span class="material-symbols-outlined btn-icon">rocket_launch</span>
+                    Start predict
                 </button>
+
+                <div id="skin-workflow-panel" class="skin-workflow-panel hidden" aria-labelledby="skin-workflow-title">
+                    <div class="skin-workflow-panel-header">
+                        <h4 id="skin-workflow-title">
+                            <span class="material-symbols-outlined btn-icon">rocket_launch</span>
+                            Start predict
+                        </h4>
+                        <button id="btn-close-skin-workflow" class="panel-close" aria-label="Close">×</button>
+                    </div>
+                    <p class="skin-workflow-panel-copy">The prediction runs in stages and each completed step gets a check mark.</p>
+
+                    <div class="skin-workflow skin-workflow-compact" id="skin-workflow" aria-label="Prediction workflow steps">
+                        <div class="workflow-step" data-step="0">
+                            <span class="workflow-step-badge">1</span>
+                            <div>
+                                <div class="workflow-step-title">YOTVATA (36) selected</div>
+                                <div class="workflow-step-copy">Default station is preselected and other stations stay disabled.</div>
+                            </div>
+                            <span class="workflow-step-state" aria-hidden="true">•</span>
+                        </div>
+                        <div class="workflow-step" data-step="1">
+                            <span class="workflow-step-badge">2</span>
+                            <div>
+                                <div class="workflow-step-title">Load meteorological data</div>
+                                <div class="workflow-step-copy">Fetch and process weather history for the selected station.</div>
+                            </div>
+                            <span class="workflow-step-state" aria-hidden="true">•</span>
+                        </div>
+                        <div class="workflow-step" data-step="2">
+                            <span class="workflow-step-badge">3</span>
+                            <div>
+                                <div class="workflow-step-title">Generate prediction</div>
+                                <div class="workflow-step-copy">Run the model and show the prediction output.</div>
+                            </div>
+                            <span class="workflow-step-state" aria-hidden="true">•</span>
+                        </div>
+                    </div>
+                </div>
 
                 <div id="weather-status" class="weather-status" style="display:none;">
                     <span class="spinner">⏳</span>
@@ -377,64 +410,10 @@
                     </div>
                 </div>
 
-                <div id="manual-weather-container" class="manual-weather" style="display:none; margin-top:16px;">
-                    <h4>
-                        <span class="material-symbols-outlined btn-icon">edit_note</span>
-                        Manual Weather Features
-                    </h4>
-                    <p class="helper-text">If the climate API fails, enter the pre-computed features manually.</p>
-                    <div class="form-group">
-                        <label>Heat Hours (Differentiation)</label>
-                        <input type="number" id="manual-t-inf" step="0.1" placeholder="e.g., 120">
-                    </div>
-                    <div class="form-group">
-                        <label>Avg Humidity (Differentiation) %</label>
-                        <input type="number" id="manual-h-inf" step="0.1" placeholder="e.g., 45">
-                    </div>
-                    <div class="form-group">
-                        <label>Evaporation (Differentiation) mm</label>
-                        <input type="number" id="manual-e-inf" step="0.1" placeholder="e.g., 15">
-                    </div>
-                    <div class="form-group">
-                        <label>Heat Hours (Flowering)</label>
-                        <input type="number" id="manual-t-flow" step="0.1" placeholder="e.g., 80">
-                    </div>
-                    <div class="form-group">
-                        <label>Avg Humidity (Flowering) %</label>
-                        <input type="number" id="manual-h-flow" step="0.1" placeholder="e.g., 50">
-                    </div>
-                    <div class="form-group">
-                        <label>Evaporation (Flowering) mm</label>
-                        <input type="number" id="manual-e-flow" step="0.1" placeholder="e.g., 12">
-                    </div>
-                    <div class="form-group">
-                        <label>Heat Hours (Thinning)</label>
-                        <input type="number" id="manual-t-thin" step="0.1" placeholder="e.g., 90">
-                    </div>
-                    <div class="form-group">
-                        <label>Avg Humidity (Thinning) %</label>
-                        <input type="number" id="manual-h-thin" step="0.1" placeholder="e.g., 55">
-                    </div>
-                    <div class="form-group">
-                        <label>Evaporation (Thinning) mm</label>
-                        <input type="number" id="manual-e-thin" step="0.1" placeholder="e.g., 10">
-                    </div>
-                    <div class="btn-center">
-                        <button id="btn-manual-weather-done" class="btn btn-weather">
-                            <span class="material-symbols-outlined btn-icon">check</span>
-                            Apply Manual Features
-                        </button>
-                    </div>
-                </div>
             </div>
 
-            <div class="btn-center">
-                <button id="btn-start-skin" class="btn btn-analyze" disabled>
-                    <span class="material-symbols-outlined btn-icon">model_training</span>
-                    Load climate data first
-                </button>
-            </div>
         </section>
+
 
         <!-- ======================================================
              RESULTS PAGE
@@ -477,13 +456,13 @@
     </main>
 
     <!-- Scripts -->
-    <script src="js/weather-api.js?v=20260510"></script>
-    <script src="js/xgboost-predictor.js?v=20260510"></script>
-    <script src="js/data-processor.js?v=20260510"></script>
-    <script src="js/rf-predictor.js?v=20260510"></script>
-    <script src="js/yield-mode.js?v=20260510"></script>
-    <script src="js/skin-mode.js?v=20260510"></script>
-    <script src="js/app-new.js?v=20260510"></script>
+    <script src="js/weather-api.js?v=20260511d"></script>
+    <script src="js/xgboost-predictor.js?v=20260511d"></script>
+    <script src="js/data-processor.js?v=20260511d"></script>
+    <script src="js/rf-predictor.js?v=20260511d"></script>
+    <script src="js/yield-mode.js?v=20260511d"></script>
+    <script src="js/skin-mode.js?v=20260511d"></script>
+    <script src="js/app-new.js?v=20260511d"></script>
 
 </body>
 

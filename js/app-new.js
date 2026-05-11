@@ -2,6 +2,7 @@
     'use strict';
 
     const IMS_API_TOKEN = 'API_KEY_VALUE';
+    const DEFAULT_STATION_ID = 36;
 
     const MODEL_CONFIGS = {
         yield: {
@@ -31,10 +32,12 @@
         modelLoaded: {},
         weatherClient: null,
         stationsData: [],
+        stationLoadPromise: null,
         weatherFeatures: null,
         selectedStationId: null,
         selectedStationLabel: 'N/A',
         isLoadingWeather: false,
+        isSkinWorkflowRunning: false,
         lastPrediction: null,
     };
 
@@ -56,11 +59,10 @@
         setupYieldControls();
         setupAgeToggle();
         setupWeatherControls();
-        setupManualWeatherControls();
         setupStartButtons();
         renderCurrentPage();
 
-        loadStations();
+        state.stationLoadPromise = loadStations();
     });
 
     async function initializeModels() {
@@ -119,12 +121,24 @@
             if (event.target === bugPopup) toggleBugPopup(false);
         });
 
+        const closeSkinWorkflow = $('#btn-close-skin-workflow');
+        if (closeSkinWorkflow) closeSkinWorkflow.addEventListener('click', () => toggleSkinWorkflowPanel(false));
+        const skinWorkflowPanel = $('#skin-workflow-panel');
+        if (skinWorkflowPanel) skinWorkflowPanel.addEventListener('click', (event) => {
+            if (event.target === skinWorkflowPanel) toggleSkinWorkflowPanel(false);
+        });
     }
 
     function toggleBugPopup(show) {
         const popup = $('#bug-popup');
         if (!popup) return;
         popup.classList.toggle('hidden', !show);
+    }
+
+    function toggleSkinWorkflowPanel(show) {
+        const panel = $('#skin-workflow-panel');
+        if (!panel) return;
+        panel.classList.toggle('hidden', !show);
     }
 
     function navigateBack() {
@@ -259,49 +273,150 @@
     }
 
     function setupWeatherControls() {
-        const weatherBtn = $('#btn-load-weather');
-        if (weatherBtn) weatherBtn.addEventListener('click', loadWeatherData);
+        const weatherBtn = $('#btn-start-skin');
+        if (weatherBtn) weatherBtn.addEventListener('click', startSkinPredictionWorkflow);
         const stationSelect = $('#station-select');
         if (stationSelect) {
             stationSelect.addEventListener('change', () => {
                 state.selectedStationId = stationSelect.value;
                 state.selectedStationLabel = stationSelect.options[stationSelect.selectedIndex]?.text || 'N/A';
+                updateSkinWorkflowStep(0, stationSelect.value === String(DEFAULT_STATION_ID) ? 'done' : 'active');
                 updateAnalyzeButton();
             });
         }
     }
 
-    function setupManualWeatherControls() {
-        const manualLink = $('#manual-entry-link');
-        if (manualLink) {
-            manualLink.addEventListener('click', event => {
-                event.preventDefault();
-                toggleManualSection(true);
-                showToast('Please fill the weather features manually.', 'info');
-            });
-        }
-
-        const manualDone = $('#btn-manual-weather-done');
-        if (manualDone) manualDone.addEventListener('click', applyManualWeather);
-    }
-
     function setupStartButtons() {
         const yieldButton = $('#btn-start-yield');
-        const skinButton = $('#btn-start-skin');
         if (yieldButton) yieldButton.addEventListener('click', () => runAnalysis('yield'));
-        if (skinButton) skinButton.addEventListener('click', () => runAnalysis('skin'));
     }
 
     function updateAnalyzeButton() {
         const skinButton = $('#btn-start-skin');
         if (skinButton) {
-            if (!state.weatherFeatures) {
-                skinButton.disabled = true;
-                skinButton.textContent = 'Load climate data first';
-            } else {
-                skinButton.disabled = false;
-                skinButton.textContent = 'Start prediction';
+            skinButton.disabled = state.isLoadingWeather || state.isSkinWorkflowRunning;
+            skinButton.textContent = state.isLoadingWeather ? 'Loading...' : 'Start predict';
+        }
+    }
+
+    async function ensureStationsLoaded() {
+        if (state.stationLoadPromise) {
+            await state.stationLoadPromise;
+        }
+    }
+
+    function getStationById(stationId) {
+        return state.stationsData.find(station => String(station.stationId) === String(stationId));
+    }
+
+    function syncDefaultStationSelection() {
+        const select = $('#station-select');
+        if (!select) return null;
+
+        const preferredStation = getStationById(DEFAULT_STATION_ID) || state.stationsData[0];
+        if (!preferredStation) return null;
+
+        const stationId = String(preferredStation.stationId);
+        select.value = stationId;
+        select.selectedIndex = Array.from(select.options).findIndex(option => option.value === stationId);
+        state.selectedStationId = stationId;
+        state.selectedStationLabel = select.options[select.selectedIndex]?.text || preferredStation.name || 'N/A';
+        updateSkinWorkflowStep(0, 'done');
+        return preferredStation;
+    }
+
+    function renderStationOptions(stations) {
+        const select = $('#station-select');
+        if (!select) return;
+
+        const preferredStation = stations.find(station => String(station.stationId) === String(DEFAULT_STATION_ID));
+        const otherStations = stations
+            .filter(station => String(station.stationId) !== String(DEFAULT_STATION_ID))
+            .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        const orderedStations = preferredStation ? [preferredStation, ...otherStations] : otherStations;
+
+        select.innerHTML = '';
+
+        orderedStations.forEach((station, index) => {
+            const option = document.createElement('option');
+            option.value = station.stationId;
+            option.textContent = `${station.name} (${station.stationId})`;
+            if (String(station.stationId) !== String(DEFAULT_STATION_ID)) {
+                option.disabled = true;
             }
+            if (index === 0) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+
+        if (!preferredStation && select.options.length > 0) {
+            select.options[0].selected = true;
+        }
+    }
+
+    function updateSkinWorkflowStep(stepIndex, status) {
+        const step = document.querySelector(`.workflow-step[data-step="${stepIndex}"]`);
+        if (!step) return;
+
+        step.classList.remove('is-active', 'is-done', 'is-error');
+        const stateEl = step.querySelector('.workflow-step-state');
+        const badgeEl = step.querySelector('.workflow-step-badge');
+
+        if (status === 'active') {
+            step.classList.add('is-active');
+            if (stateEl) stateEl.textContent = '•';
+            if (badgeEl) badgeEl.textContent = String(stepIndex + 1);
+        } else if (status === 'done') {
+            step.classList.add('is-done');
+            if (stateEl) stateEl.textContent = '✓';
+            if (badgeEl) badgeEl.textContent = '✓';
+        } else if (status === 'error') {
+            step.classList.add('is-error');
+            if (stateEl) stateEl.textContent = '!';
+            if (badgeEl) badgeEl.textContent = '!';
+        } else {
+            if (stateEl) stateEl.textContent = '•';
+            if (badgeEl) badgeEl.textContent = String(stepIndex + 1);
+        }
+    }
+
+    function resetSkinWorkflowSteps() {
+        [0, 1, 2].forEach(stepIndex => updateSkinWorkflowStep(stepIndex, ''));
+    }
+
+    async function startSkinPredictionWorkflow() {
+        if (state.isSkinWorkflowRunning) return;
+
+        state.isSkinWorkflowRunning = true;
+        toggleSkinWorkflowPanel(true);
+        updateAnalyzeButton();
+        resetSkinWorkflowSteps();
+
+        try {
+            updateSkinWorkflowStep(0, 'active');
+            await ensureStationsLoaded();
+            const selectedStation = syncDefaultStationSelection();
+            if (!selectedStation) {
+                throw new Error('No stations available for prediction.');
+            }
+
+            updateSkinWorkflowStep(1, 'active');
+            await loadWeatherData({ suppressToast: true });
+            updateSkinWorkflowStep(1, 'done');
+
+            updateSkinWorkflowStep(2, 'active');
+            runAnalysis('skin', { suppressToast: true, rethrow: true });
+            updateSkinWorkflowStep(2, 'done');
+            showToast('Prediction generated successfully.', 'success');
+            setTimeout(() => toggleSkinWorkflowPanel(false), 700);
+        } catch (err) {
+            const failedStep = state.weatherFeatures ? 2 : 1;
+            updateSkinWorkflowStep(failedStep, 'error');
+            showToast(err.message, 'error');
+        } finally {
+            state.isSkinWorkflowRunning = false;
+            updateAnalyzeButton();
         }
     }
 
@@ -314,28 +429,32 @@
             const stations = await state.weatherClient.getStations();
             if (!Array.isArray(stations)) throw new Error('Invalid station list');
             state.stationsData = stations.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-            select.innerHTML = '<option value="">Select a station...</option>';
-            state.stationsData.forEach(station => {
-                const option = document.createElement('option');
-                option.value = station.stationId;
-                option.textContent = `${station.name} (${station.stationId})`;
-                select.appendChild(option);
-            });
+            renderStationOptions(state.stationsData);
+            syncDefaultStationSelection();
             select.disabled = false;
+            updateSkinWorkflowStep(0, 'done');
         } catch (err) {
             select.innerHTML = '<option value="">Failed to load stations</option>';
             showToast('Failed to load stations: ' + err.message, 'error');
-            toggleManualSection(true);
         } finally {
             setWeatherLoading(false, '');
         }
     }
 
-    async function loadWeatherData() {
+    async function loadWeatherData(options = {}) {
+        const { suppressToast = false } = options;
         const select = $('#station-select');
-        if (!select || !select.value) {
-            showToast('Please select a station first.', 'error');
-            return;
+        if (!select) {
+            if (!suppressToast) showToast('Station selector is unavailable.', 'error');
+            return false;
+        }
+
+        if (!select.value) {
+            const defaultStation = syncDefaultStationSelection();
+            if (!defaultStation) {
+                if (!suppressToast) showToast('Please select a station first.', 'error');
+                return false;
+            }
         }
 
         const stationName = select.options[select.selectedIndex]?.text || 'station';
@@ -347,9 +466,8 @@
         const startDate = `${prevYear}/11/01`;
         const endDate = `${currentYear}/05/15`;
 
-        setWeatherLoading(true, `Loading station data for ${stationName}...`);
+        setWeatherLoading(true, `Loading meteorological data for ${stationName}...`);
         state.weatherFeatures = null;
-        updateAnalyzeButton();
 
         try {
             const rawResponse = await state.weatherClient.getHistoricalData(state.selectedStationId, startDate, endDate);
@@ -364,10 +482,11 @@
             const features = state.processor.processWeatherData(rawDataList, currentYear);
             state.weatherFeatures = features;
             displayWeatherFeatures(features);
-            showToast('Weather data loaded and processed.', 'success');
+            if (!suppressToast) showToast('Weather data loaded and processed.', 'success');
+            return true;
         } catch (err) {
-            showToast('Failed to load weather data: ' + err.message, 'error');
-            toggleManualSection(true);
+            if (!suppressToast) showToast('Failed to load weather data: ' + err.message, 'error');
+            throw err;
         } finally {
             setWeatherLoading(false, '');
             updateAnalyzeButton();
@@ -377,7 +496,7 @@
     function setWeatherLoading(loading, message) {
         state.isLoadingWeather = loading;
         const statusEl = $('#weather-status');
-        const btnLoad = $('#btn-load-weather');
+        const btnLoad = $('#btn-start-skin');
         const select = $('#station-select');
 
         if (!statusEl || !btnLoad || !select) return;
@@ -390,8 +509,8 @@
             select.disabled = true;
         } else {
             statusEl.style.display = 'none';
-            btnLoad.disabled = false;
-            btnLoad.textContent = '📡 Load Station Data';
+            btnLoad.disabled = state.isSkinWorkflowRunning;
+            btnLoad.textContent = 'Start predict';
             select.disabled = false;
         }
     }
@@ -415,45 +534,7 @@
         $('#feat-e-thin').textContent = fmt(features.E_Thinning) + ' mm';
     }
 
-    function toggleManualSection(show) {
-        const container = $('#manual-weather-container');
-        if (!container) return;
-        container.style.display = show ? 'block' : 'none';
-    }
-
-    function applyManualWeather() {
-        try {
-            const makeVal = (selector) => {
-                const element = $(selector);
-                if (!element) throw new Error('Missing input field.');
-                const value = parseFloat(element.value);
-                if (isNaN(value)) throw new Error('Please enter all manual weather values.');
-                return value;
-            };
-
-            const features = {
-                T_Inf_differentiation: makeVal('#manual-t-inf'),
-                H_Inf_differentiation: makeVal('#manual-h-inf'),
-                E_Inf_differentiation: makeVal('#manual-e-inf'),
-                T_Flowering: makeVal('#manual-t-flow'),
-                H_Flowering: makeVal('#manual-h-flow'),
-                E_Flowering: makeVal('#manual-e-flow'),
-                T_Thinning: makeVal('#manual-t-thin'),
-                H_Thinning: makeVal('#manual-h-thin'),
-                E_Thinning: makeVal('#manual-e-thin'),
-            };
-
-            state.weatherFeatures = features;
-            displayWeatherFeatures(features);
-            toggleManualSection(false);
-            updateAnalyzeButton();
-            showToast('Manual weather features applied.', 'success');
-        } catch (err) {
-            showToast(err.message, 'error');
-        }
-    }
-
-    function runAnalysis(pageKey) {
+    function runAnalysis(pageKey, options = {}) {
         try {
             const pageSection = $('#page-' + pageKey);
             if (!pageSection) throw new Error('Page not found.');
@@ -520,13 +601,16 @@
             state.lastPrediction = { meanYield, stdYield, features, yieldScenario };
             if (pageKey === 'yield') {
                 renderInlineYieldResults(meanYield, stdYield, features);
-                showToast('Prediction generated (inline).', 'success');
+                if (!options.suppressToast) showToast('Prediction generated (inline).', 'success');
             } else {
                 navigateTo('results');
-                showToast('Prediction generated successfully.', 'success');
+                if (!options.suppressToast) showToast('Prediction generated successfully.', 'success');
             }
+            return true;
         } catch (err) {
-            showToast(err.message, 'error');
+            if (!options.suppressToast) showToast(err.message, 'error');
+            if (options.rethrow) throw err;
+            return false;
         }
     }
 
