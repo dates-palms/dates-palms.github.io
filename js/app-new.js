@@ -7,7 +7,7 @@
     const MODEL_CONFIGS = {
         yield: {
             key: 'yield',
-            title: 'Predict Tree Yield (kg)',
+            title: 'Yield per Tree Prediction',
             description: 'Predict tree yield in kilograms without climate data.',
             modelUrl: 'model/rf_model_Model1_DropRows_Thinning_(1A)%20No%20Climate.js',
             lateModelUrl: 'model/fixed_xgboost_late_count_Model1_DropRows_Coverage_1B_NoClimate.js',
@@ -16,7 +16,7 @@
         },
         skin: {
             key: 'skin',
-            title: 'Skin separation distribution',
+            title: 'Skin Separation Distribution',
             description: 'Predict skin separation distribution using climate data.',
             modelUrl: 'model/xgboost_skin_model_1a.json',
             requiresClimate: true,
@@ -295,7 +295,7 @@
         const skinButton = $('#btn-start-skin');
         if (skinButton) {
             skinButton.disabled = state.isLoadingWeather || state.isSkinWorkflowRunning;
-            skinButton.textContent = state.isLoadingWeather ? 'Loading...' : 'Start predict';
+            skinButton.textContent = state.isLoadingWeather ? 'Loading...' : 'START';
         }
     }
 
@@ -510,7 +510,7 @@
         } else {
             statusEl.style.display = 'none';
             btnLoad.disabled = state.isSkinWorkflowRunning;
-            btnLoad.textContent = 'Start predict';
+            btnLoad.textContent = 'START';
             select.disabled = false;
         }
     }
@@ -816,13 +816,14 @@
         const summary = $('#yield-result-summary');
         if (summary) {
             const valEl = summary.querySelector('.result-card-value');
-            if (valEl) valEl.innerHTML = `${mean.toFixed(1)}<span style="font-size: 0.6em; font-weight: normal;">kg/tree</span>`;
+            if (valEl) valEl.innerHTML = `${mean.toFixed(1)} <span style="font-size: 0.6em; font-weight: normal;">kg/tree</span>`;
             const capEl = summary.querySelector('.result-card-caption');
-            if (capEl) capEl.textContent = `Confidence: ${(mean - std).toFixed(1)} - ${(mean + std).toFixed(1)} kg`;
+            if (capEl) capEl.textContent = `Confidence: ${(mean - std).toFixed(1)} - ${(mean + std).toFixed(1)} kg/tree`;
         }
         // populate feature table into yield pane
         buildFeatureTable(features);
-        if (pane) pane.classList.remove('muted');
+        const inner = document.querySelector('#yield-results-inner');
+        if (inner) inner.classList.remove('muted');
     }
 
     function showToast(message, type = '') {
