@@ -1950,3 +1950,63 @@ body {
     }
     body.mobile-menu-open .mobile-menu-backdrop { display: block; }
 }
+
+/* === Yield page – no-scroll compact layout === */
+#page-yield {
+    padding: 16px 52px;
+}
+#page-yield .page-title-row {
+    margin-bottom: 12px;
+    padding: 12px 18px;
+}
+#page-yield .page-title-row h2 {
+    font-size: 24px;
+}
+#page-yield.card,
+#page-yield .yield-inner-card.card {
+    padding: 16px 22px;
+    margin-bottom: 0;
+}
+#page-yield .yield-thinning-title {
+    margin-bottom: 4px;
+    font-size: 10px;
+}
+#page-yield .yield-thinning-controls {
+    margin-bottom: 8px;
+}
+#page-yield .segmented-switch {
+    margin-bottom: 6px;
+}
+#page-yield .segmented-switch label {
+    padding: 5px 8px;
+    font-size: 11.5px;
+}
+#page-yield .form-group {
+    margin-bottom: 6px;
+}
+#page-yield .form-group label {
+    margin-bottom: 3px;
+    font-size: 10px;
+}
+#page-yield .form-group input[type="number"] {
+    padding: 7px 10px;
+    font-size: 13px;
+}
+#page-yield .btn-center {
+    margin-top: 10px;
+}
+#page-yield .yield-columns {
+    gap: 20px;
+    margin-top: 4px;
+}
+#page-yield .section-label {
+    margin: 6px 0 4px;
+    font-size: 10.5px;
+}
+#page-yield .form-row {
+    gap: 10px;
+    margin-bottom: 2px;
+}
+#page-yield #tab-generation .form-group {
+    margin-bottom: 4px;
+}

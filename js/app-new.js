@@ -816,7 +816,7 @@
         const summary = $('#yield-result-summary');
         if (summary) {
             const valEl = summary.querySelector('.result-card-value');
-            if (valEl) valEl.textContent = `${mean.toFixed(1)} kg/tree`;
+            if (valEl) valEl.innerHTML = `${mean.toFixed(1)}<span style="font-size: 0.6em; font-weight: normal;">kg/tree</span>`;
             const capEl = summary.querySelector('.result-card-caption');
             if (capEl) capEl.textContent = `Confidence: ${(mean - std).toFixed(1)} - ${(mean + std).toFixed(1)} kg`;
         }

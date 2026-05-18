@@ -67,8 +67,8 @@
                 <div class="home-grid">
                     <button class="home-card" data-target="yield">
                         <span class="home-card-icon material-symbols-outlined">park</span>
-                        <div class="home-card-title">Tree yield (kg)</div>
-                        <p>Physiology-based model leveraging crop data and canopy metrics.</p>
+                        <div class="home-card-title">Yield per tree (kg)</div>
+                        <p>Bunch and fruit count-based model</p>
                         <span class="home-card-cta">
                             Get started <span class="material-symbols-outlined">arrow_forward</span>
                         </span>
@@ -76,7 +76,7 @@
                     <button class="home-card" data-target="skin">
                         <span class="home-card-icon material-symbols-outlined">wb_sunny</span>
                         <div class="home-card-title">Skin separation distribution</div>
-                        <p>Climate data-based model</p>
+                        <p>Climate-based model</p>
                         <span class="home-card-cta">
                             Get started <span class="material-symbols-outlined">arrow_forward</span>
                         </span>
@@ -89,52 +89,46 @@
              YIELD PAGE
              ====================================================== -->
         <section class="page" id="page-yield">
-            <div class="page-title-row">
+        
+           <!-- <div class="page-title-row">
                 <h2 id="page-heading">
                     <span class="material-symbols-outlined page-heading-icon">scale</span>
-                    Predict Tree Yield (kg)
+                    Yield per Tree (kg) Prediction
                 </h2>
-            </div>
+            </div> -->
 
             <div class="card yield-inner-card">
-                <h3 class="card-title">
-                    <span class="material-symbols-outlined btn-icon">agriculture</span>
-                    Tree Details and Thinning Protocol/Counts
-                </h3>
+               
 
                 <div class="yield-columns">
                     <div class="yield-form-column">
                 <!-- Tree Age block -->
-                <div class="form-block">
-                    <div class="form-group-inline">
-                        <label>
-                            <span class="material-symbols-outlined label-icon">calendar_today</span>
-                            Tree Age Input
-                        </label>
-                        <div class="radio-group age-mode-switch" role="group" aria-label="Tree Age Input Mode">
-                            <input type="radio" name="age-mode" id="age-mode-age" value="age" checked>
-                            <label for="age-mode-age">Age</label>
-                            <input type="radio" name="age-mode" id="age-mode-year" value="year">
-                            <label for="age-mode-year">Planting Year</label>
-                        </div>
+                <div class="yield-thinning-controls">
+                    <div class="yield-thinning-title">Tree Age/Planting Year</div>
+
+                    <div class="radio-group yield-mode-row segmented-switch" role="group" aria-label="Tree Age Input Mode">
+                        <input type="radio" name="age-mode" id="age-mode-age" value="age" checked>
+                        <label for="age-mode-age">Age</label>
+                        <input type="radio" name="age-mode" id="age-mode-year" value="year">
+                        <label for="age-mode-year">Planting Year</label>
                     </div>
 
                     <div id="age-direct">
                         <div class="form-group">
-                            <input type="number" id="input-age" placeholder="Years" min="1" max="100">
+                            <input type="number" id="input-age" placeholder="(e.g., 12)" min="1" max="100">
                             <div class="error-msg">Please enter a valid tree age.</div>
                         </div>
                     </div>
                     <div id="age-year" style="display:none;">
                         <div class="form-group">
-                            <input type="number" id="input-planting-year" placeholder="Year" min="1950" max="2026">
+                            <input type="number" id="input-planting-year" placeholder="(e.g., 2014)" min="1950" max="2026">
                             <div class="error-msg">Please enter a valid planting year.</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="yield-thinning-controls">
-                    <div class="yield-thinning-title">Thinning Protocol</div>
+                    <div class="yield-thinning-title">Thinning Protocol/Fruit Count</div>
 
                     <div class="radio-group yield-mode-row segmented-switch" role="group" aria-label="Thinning Input Mode">
                         <input type="radio" name="yield-input-mode" id="yield-mode-protocol" value="protocol" checked>
@@ -147,14 +141,14 @@
                         <input type="radio" name="yield-protocol-mode" id="yield-protocol-general" value="general" checked>
                         <label for="yield-protocol-general">General Protocol</label>
                         <input type="radio" name="yield-protocol-mode" id="yield-protocol-generation" value="generation">
-                        <label for="yield-protocol-generation">Protocol by whorl</label>
+                        <label for="yield-protocol-generation">Protocol by Whorl</label>
                     </div>
 
                     <div class="radio-group yield-submode-row segmented-switch" id="yield-counting-options" style="display:none;" role="group" aria-label="Counting Type">
                         <input type="radio" name="yield-counting-mode" id="yield-counting-early" value="early" checked>
-                        <label for="yield-counting-early">Early counts</label>
+                        <label for="yield-counting-early">Early Counts</label>
                         <input type="radio" name="yield-counting-mode" id="yield-counting-late" value="late">
-                        <label for="yield-counting-late">Late counts</label>
+                        <label for="yield-counting-late">Late Counts</label>
                     </div>
                 </div>
 
@@ -265,7 +259,7 @@
                 <div class="btn-center">
                     <button id="btn-start-yield" class="btn btn-analyze">
                         <span class="material-symbols-outlined btn-icon">model_training</span>
-                        Start prediction
+                        START
                     </button>
                 </div>
 </div> <!-- .yield-form-column -->
@@ -300,13 +294,15 @@
              SKIN PAGE
              ====================================================== -->
         <section class="page" id="page-skin">
-            <div class="page-title-row">
+         
+         
+         <!--   <div class="page-title-row">
                 <h2 id="page-heading">
                     <span class="material-symbols-outlined page-heading-icon">scatter_plot</span>
-                    Skin separation distribution prediction
+                    Skin Separation Distribution Prediction
                 </h2>
                 <p class="page-subtitle">Climate data is required for this flow.</p>
-            </div>
+            </div> -->
 
             <!-- Climate card -->
                 <div class="card">
@@ -328,41 +324,41 @@
 
                 <button id="btn-start-skin" class="btn btn-weather">
                     <span class="material-symbols-outlined btn-icon">rocket_launch</span>
-                    Start predict
+                    START
                 </button>
 
                 <div id="skin-workflow-panel" class="skin-workflow-panel hidden" aria-labelledby="skin-workflow-title">
                     <div class="skin-workflow-panel-header">
                         <h4 id="skin-workflow-title">
                             <span class="material-symbols-outlined btn-icon">rocket_launch</span>
-                            Start predict
+                            Prediction flow launched
                         </h4>
                         <button id="btn-close-skin-workflow" class="panel-close" aria-label="Close">×</button>
                     </div>
-                    <p class="skin-workflow-panel-copy">The prediction runs in stages and each completed step gets a check mark.</p>
+                    <p class="skin-workflow-panel-copy">Prediction flow runs automatically through each stage and marks completed steps</p>
 
                     <div class="skin-workflow skin-workflow-compact" id="skin-workflow" aria-label="Prediction workflow steps">
                         <div class="workflow-step" data-step="0">
                             <span class="workflow-step-badge">1</span>
                             <div>
-                                <div class="workflow-step-title">YOTVATA (36) selected</div>
-                                <div class="workflow-step-copy">Default station is preselected and other stations stay disabled.</div>
+                                <div class="workflow-step-title">YOTVATA (36) meteorology station selected</div>
+                                <div class="workflow-step-copy">Yotvata is set as the default station. Other stations are currently disabled.</div>
                             </div>
                             <span class="workflow-step-state" aria-hidden="true">•</span>
                         </div>
                         <div class="workflow-step" data-step="1">
                             <span class="workflow-step-badge">2</span>
                             <div>
-                                <div class="workflow-step-title">Load meteorological data</div>
-                                <div class="workflow-step-copy">Fetch and process weather history for the selected station.</div>
+                                <div class="workflow-step-title">Loading meteorological data</div>
+                                <div class="workflow-step-copy">This season’s data is being fetched and processed.</div>
                             </div>
                             <span class="workflow-step-state" aria-hidden="true">•</span>
                         </div>
                         <div class="workflow-step" data-step="2">
                             <span class="workflow-step-badge">3</span>
                             <div>
-                                <div class="workflow-step-title">Generate prediction</div>
-                                <div class="workflow-step-copy">Run the model and show the prediction output.</div>
+                                <div class="workflow-step-title">Generating prediction</div>
+                                <div class="workflow-step-copy">prediction output will be displayed upon completion.</div>
                             </div>
                             <span class="workflow-step-state" aria-hidden="true">•</span>
                         </div>
