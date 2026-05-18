@@ -67,7 +67,7 @@
                 <div class="home-grid">
                     <button class="home-card" data-target="yield">
                         <span class="home-card-icon material-symbols-outlined">park</span>
-                        <div class="home-card-title">Yield per tree (kg)</div>
+                        <div class="home-card-title">Yield per tree</div>
                         <p>Bunch and fruit count-based model</p>
                         <span class="home-card-cta">
                             Get started <span class="material-symbols-outlined">arrow_forward</span>
@@ -75,7 +75,7 @@
                     </button>
                     <button class="home-card" data-target="skin">
                         <span class="home-card-icon material-symbols-outlined">wb_sunny</span>
-                        <div class="home-card-title">Skin separation distribution</div>
+                        <div class="home-card-title">Skin Separation</div>
                         <p>Climate-based model</p>
                         <span class="home-card-cta">
                             Get started <span class="material-symbols-outlined">arrow_forward</span>
@@ -256,15 +256,10 @@
                     </div>
                 </div>
 
-                <div class="btn-center">
-                    <button id="btn-start-yield" class="btn btn-analyze">
-                        <span class="material-symbols-outlined btn-icon">model_training</span>
-                        START
-                    </button>
-                </div>
-</div> <!-- .yield-form-column -->
+                </div> <!-- .yield-form-column -->
 
-                    <aside id="yield-results-pane" class="yield-results-column muted">
+                    <aside id="yield-results-pane" class="yield-results-column">
+                        <div id="yield-results-inner" class="muted">
                         <div class="result-summary-compact">
                             <h4 class="compact-title">
                                 <span class="material-symbols-outlined btn-icon">summarize</span>
@@ -285,6 +280,14 @@
                             </thead>
                             <tbody id="yield-feature-tbody"></tbody>
                         </table>
+                        </div> <!-- yield-results-inner -->
+
+                    <div class="btn-center" style="margin-top:16px;">
+                        <button id="btn-start-yield" class="btn btn-analyze">
+                            <span class="material-symbols-outlined btn-icon">model_training</span>
+                            START
+                        </button>
+                    </div>
                     </aside>
                 </div> <!-- .yield-columns -->
             </div> <!-- .card yield-inner-card -->
@@ -358,7 +361,7 @@
                             <span class="workflow-step-badge">3</span>
                             <div>
                                 <div class="workflow-step-title">Generating prediction</div>
-                                <div class="workflow-step-copy">prediction output will be displayed upon completion.</div>
+                                <div class="workflow-step-copy">The prediction output will be displayed upon completion.</div>
                             </div>
                             <span class="workflow-step-state" aria-hidden="true">•</span>
                         </div>
