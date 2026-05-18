@@ -3,6 +3,7 @@
 
     const IMS_API_TOKEN = 'API_KEY_VALUE';
     const DEFAULT_STATION_ID = 36;
+    const SKIN_MODEL_CLOUD_URL = 'https://us-central1-rsc-date-palm-lzp.cloudfunctions.net/predict_skin_separation';
 
     const MODEL_CONFIGS = {
         yield: {
@@ -18,9 +19,9 @@
             key: 'skin',
             title: 'Skin Separation Distribution',
             description: 'Predict skin separation distribution using climate data.',
-            modelUrl: 'model/xgboost_skin_model_1a.json',
             requiresClimate: true,
             resultType: 'distribution',
+            source: 'cloud',
         },
     };
 
@@ -48,7 +49,6 @@
         state.processor = new DataProcessor();
         state.predictors.yieldEarly = new RFPredictor();
         state.predictors.yieldLate = new XGBoostPredictor();
-        state.predictors.skin = new XGBoostPredictor();
         state.weatherClient = new WeatherAPIClient(IMS_API_TOKEN, { disableProxy: false });
 
         await initializeModels();
@@ -71,7 +71,7 @@
         state.modelLoaded.yieldEarly = yieldEarlyLoaded;
         state.modelLoaded.yieldLate = yieldLateLoaded;
         state.modelLoaded.yield = yieldEarlyLoaded && yieldLateLoaded;
-        state.modelLoaded.skin = false;
+        state.modelLoaded.skin = true;
         updateModelStatus();
     }
 
@@ -80,7 +80,8 @@
         if (!badge) return;
         const statusItems = Object.entries(MODEL_CONFIGS).map(([key, cfg]) => {
             const ready = state.modelLoaded[key];
-            return `${cfg.title}: <span class="model-status-text ${ready ? 'ready' : 'fallback'}">${ready ? 'ready' : 'fallback'}</span>`;
+            const label = cfg.source === 'cloud' ? 'cloud' : (ready ? 'ready' : 'fallback');
+            return `${cfg.title}: <span class="model-status-text ${ready ? 'ready' : 'fallback'}">${label}</span>`;
         });
         badge.innerHTML = statusItems.join(' • ');
     }
@@ -185,7 +186,7 @@
         if (backBtn) backBtn.style.display = state.currentPage === 'home' ? 'none' : 'inline-flex';
 
         if (state.currentPage === 'results' && state.lastPrediction) {
-            displayResults(state.lastPrediction.meanYield, state.lastPrediction.stdYield, state.lastPrediction.features);
+            displayResults(state.lastPrediction);
         }
 
         if (state.currentPage === 'home') {
@@ -389,6 +390,7 @@
         if (state.isSkinWorkflowRunning) return;
 
         state.isSkinWorkflowRunning = true;
+        state.weatherFeatures = null;
         toggleSkinWorkflowPanel(true);
         updateAnalyzeButton();
         resetSkinWorkflowSteps();
@@ -402,11 +404,9 @@
             }
 
             updateSkinWorkflowStep(1, 'active');
-            await loadWeatherData({ suppressToast: true });
-            updateSkinWorkflowStep(1, 'done');
-
             updateSkinWorkflowStep(2, 'active');
-            runAnalysis('skin', { suppressToast: true, rethrow: true });
+            await runAnalysis('skin', { suppressToast: true, rethrow: true });
+            updateSkinWorkflowStep(1, 'done');
             updateSkinWorkflowStep(2, 'done');
             showToast('Prediction generated successfully.', 'success');
             setTimeout(() => toggleSkinWorkflowPanel(false), 700);
@@ -522,72 +522,118 @@
         const fmt = value => typeof value === 'number' ? value.toFixed(1) : '—';
 
         $('#feat-t-inf').textContent = fmt(features.T_Inf_differentiation);
-        $('#feat-h-inf').textContent = fmt(features.H_Inf_differentiation) + '%';
         $('#feat-e-inf').textContent = fmt(features.E_Inf_differentiation) + ' mm';
 
-        $('#feat-t-flow').textContent = fmt(features.T_Flowering);
-        $('#feat-h-flow').textContent = fmt(features.H_Flowering) + '%';
-        $('#feat-e-flow').textContent = fmt(features.E_Flowering) + ' mm';
+        $('#feat-e-growth').textContent = fmt(features.E_Growth) + ' mm';
+        $('#feat-h-june').textContent = fmt(features.H_June_Drop) + '%';
 
-        $('#feat-t-thin').textContent = fmt(features.T_Thinning);
-        $('#feat-h-thin').textContent = fmt(features.H_Thinning) + '%';
-        $('#feat-e-thin').textContent = fmt(features.E_Thinning) + ' mm';
+        $('#feat-e-ripen').textContent = fmt(features.E_Ripening) + ' mm';
+        $('#feat-h-ripen').textContent = fmt(features.H_Ripening) + '%';
     }
 
-    function runAnalysis(pageKey, options = {}) {
+    function resolveSkinTargetYear() {
+        const currentYear = new Date().getFullYear();
+        const cutoff = new Date(currentYear, 7, 31, 23, 59, 59);
+        if (new Date() < cutoff) {
+            const usePrevious = window.confirm(
+                `Data for ${currentYear} may be incomplete before Aug 31. Click OK to use ${currentYear - 1}, or Cancel to keep ${currentYear}.`
+            );
+            return usePrevious ? currentYear - 1 : currentYear;
+        }
+        return currentYear;
+    }
+
+    async function requestSkinPrediction(stationId, targetYear) {
+        const response = await fetch(SKIN_MODEL_CLOUD_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stationId, targetYear }),
+        });
+
+        let payload = null;
+        try {
+            payload = await response.json();
+        } catch (err) {
+            throw new Error('Invalid response from prediction service.');
+        }
+
+        if (!response.ok || !payload || payload.status === 'error') {
+            const message = payload && payload.message ? payload.message : 'Prediction service failed.';
+            throw new Error(message);
+        }
+
+        return payload;
+    }
+
+    function normalizeSkinDistribution(prediction) {
+        if (!prediction) return [];
+        if (Array.isArray(prediction.distribution)) return prediction.distribution;
+        if (Array.isArray(prediction)) return prediction;
+        if (typeof prediction === 'object') {
+            const labels = ['0%-5%', '5%-25%', '25%-40%', 'Other'];
+            return labels.map(label => ({ label, value: Number(prediction[label]) || 0 }));
+        }
+        return [];
+    }
+
+    async function runAnalysis(pageKey, options = {}) {
         try {
             const pageSection = $('#page-' + pageKey);
             if (!pageSection) throw new Error('Page not found.');
 
-            const currentYear = new Date().getFullYear();
+            if (pageKey === 'skin') {
+                const select = $('#station-select');
+                if (!select || !select.value) {
+                    const defaultStation = syncDefaultStationSelection();
+                    if (!defaultStation) throw new Error('Please select a station first.');
+                }
+
+                state.selectedStationId = select.value;
+                state.selectedStationLabel = select.options[select.selectedIndex]?.text || 'N/A';
+
+                const targetYear = resolveSkinTargetYear();
+                let response;
+                setWeatherLoading(true, `Loading meteorological data for ${state.selectedStationLabel}...`);
+                try {
+                    response = await requestSkinPrediction(state.selectedStationId, targetYear);
+                } finally {
+                    setWeatherLoading(false, '');
+                }
+
+                const distribution = normalizeSkinDistribution(response.prediction);
+                const features = response.features || {};
+                const metadata = response.metadata || {};
+                metadata.targetYear = metadata.targetYear || targetYear;
+
+                state.weatherFeatures = features;
+                displayWeatherFeatures(features);
+                state.lastPrediction = { distribution, features, metadata };
+
+                navigateTo('results');
+                if (!options.suppressToast) showToast('Prediction generated successfully.', 'success');
+                return true;
+            }
+
             let features;
             let treeAge;
             let protocolType;
             let thinning;
             let yieldScenario = 'early_counting';
 
-            if (pageKey === 'skin') {
-                if (!state.weatherFeatures) throw new Error('Please load climate data before starting the prediction.');
-
-                const baseInputs = window.SkinMode && typeof window.SkinMode.getBaseInputs === 'function'
-                    ? window.SkinMode.getBaseInputs()
-                    : {
-                        treeAge: 8,
-                        protocolType: 'general',
-                        thinning: { branches: 25, fronds: 120, clusters: 8 },
-                    };
-
-                treeAge = baseInputs.treeAge;
-                protocolType = baseInputs.protocolType;
-                thinning = baseInputs.thinning;
-
-                features = state.processor.prepareInputVector({
-                    treeAge,
-                    year: currentYear,
-                    protocolType,
-                    thinning,
-                    weather: state.weatherFeatures,
-                });
-            } else {
-                treeAge = getTreeAge(pageSection);
-                protocolType = getActiveProtocol(pageSection);
-                thinning = getThinningData(pageSection, protocolType);
-                if (window.YieldMode && typeof window.YieldMode.getScenario === 'function') {
-                    yieldScenario = window.YieldMode.getScenario(pageSection);
-                }
-
-                features = buildYieldFeatureObject(treeAge, protocolType, thinning, yieldScenario);
+            treeAge = getTreeAge(pageSection);
+            protocolType = getActiveProtocol(pageSection);
+            thinning = getThinningData(pageSection, protocolType);
+            if (window.YieldMode && typeof window.YieldMode.getScenario === 'function') {
+                yieldScenario = window.YieldMode.getScenario(pageSection);
             }
 
-            let meanYield, stdYield;
-            let modelReady = state.modelLoaded[pageKey];
-            let predictor = state.predictors[pageKey];
+            features = buildYieldFeatureObject(treeAge, protocolType, thinning, yieldScenario);
 
-            if (pageKey === 'yield') {
-                const isLateScenario = yieldScenario === 'late_counting';
-                modelReady = isLateScenario ? state.modelLoaded.yieldLate : state.modelLoaded.yieldEarly;
-                predictor = isLateScenario ? state.predictors.yieldLate : state.predictors.yieldEarly;
-            }
+            let meanYield;
+            let stdYield;
+            const isLateScenario = yieldScenario === 'late_counting';
+            const modelReady = isLateScenario ? state.modelLoaded.yieldLate : state.modelLoaded.yieldEarly;
+            const predictor = isLateScenario ? state.predictors.yieldLate : state.predictors.yieldEarly;
 
             if (modelReady) {
                 meanYield = predictor.predictFromObject(features);
@@ -599,13 +645,8 @@
             }
 
             state.lastPrediction = { meanYield, stdYield, features, yieldScenario };
-            if (pageKey === 'yield') {
-                renderInlineYieldResults(meanYield, stdYield, features);
-                if (!options.suppressToast) showToast('Prediction generated (inline).', 'success');
-            } else {
-                navigateTo('results');
-                if (!options.suppressToast) showToast('Prediction generated successfully.', 'success');
-            }
+            renderInlineYieldResults(meanYield, stdYield, features);
+            if (!options.suppressToast) showToast('Prediction generated (inline).', 'success');
             return true;
         } catch (err) {
             if (!options.suppressToast) showToast(err.message, 'error');
@@ -721,11 +762,18 @@
         return parsed;
     }
 
-    function displayResults(mean, std, features) {
+    function displayResults(result) {
         const title = $('#result-page-title');
         const summary = $('#result-summary-text');
         const stationLabel = $('#result-station-label');
         const distributionGrid = $('#distribution-grid');
+        const yearLabel = $('#result-year-label');
+        const windowLabel = $('#result-window-label');
+
+        const mean = result.meanYield;
+        const std = result.stdYield;
+        const features = result.features || {};
+        const metadata = result.metadata || {};
 
         const modelConfig = MODEL_CONFIGS[state.activeModel] || MODEL_CONFIGS.yield;
         title.textContent = modelConfig.title;
@@ -734,8 +782,19 @@
             : 'This prediction uses tree and thinning inputs only.';
         stationLabel.textContent = state.activeModel === 'skin' ? state.selectedStationLabel : 'N/A';
 
+        if (yearLabel) {
+            yearLabel.textContent = state.activeModel === 'skin' ? (metadata.targetYear || '—') : '—';
+        }
+        if (windowLabel) {
+            const startDate = metadata.startDate || '';
+            const endDate = metadata.endDate || '';
+            windowLabel.textContent = state.activeModel === 'skin' && startDate && endDate
+                ? `${startDate} → ${endDate}`
+                : '—';
+        }
+
         if (state.activeModel === 'skin') {
-            distributionGrid.innerHTML = renderDistributionCards(mean, std);
+            distributionGrid.innerHTML = renderDistributionCards(result.distribution);
         } else {
             distributionGrid.innerHTML = renderYieldResultCard(mean, std);
         }
@@ -753,23 +812,20 @@
         `;
     }
 
-    function renderDistributionCards(mean, std) {
-        const values = calculateDistributionPercentages(mean);
-        const labels = ['0%-5%', '5%-25%', '25%-40%', 'Other'];
-        return values.map((value, index) => `
+    function renderDistributionCards(distribution) {
+        if (!Array.isArray(distribution) || distribution.length === 0) {
+            return '';
+        }
+        return distribution.map(item => {
+            const label = item.label || item.range || '—';
+            const value = typeof item.value === 'number' ? item.value : Number(item.value) || 0;
+            return `
             <div class="distribution-card">
-                <div class="distribution-value">${value}%</div>
-                <div class="distribution-label">${labels[index]}</div>
+                <div class="distribution-value">${value.toFixed(1)}%</div>
+                <div class="distribution-label">${label}</div>
             </div>
-        `).join('');
-    }
-
-    function calculateDistributionPercentages(score) {
-        const base = Math.max(25, Math.min(55, Math.round(40 + (score - 100) / 5)));
-        const second = Math.max(15, Math.min(30, Math.round(20 - (score - 100) / 20)));
-        const third = 15;
-        const fourth = Math.max(10, 100 - base - second - third);
-        return [base, second, third, fourth];
+        `;
+        }).join('');
     }
 
     function buildFeatureTable(features) {
@@ -800,6 +856,10 @@
             'E_Inf_differentiation': 'Evaporation (Differentiation)',
             'E_Flowering': 'Evaporation (Flowering)',
             'E_Thinning': 'Evaporation (Thinning)',
+            'E_Ripening': 'Evaporation (Ripening)',
+            'H_June_Drop': 'Avg Humidity (June Drop)',
+            'E_Growth': 'Evaporation (Growth)',
+            'H_Ripening': 'Avg Humidity (Ripening)',
         };
 
         Object.entries(features).forEach(([key, value]) => {
