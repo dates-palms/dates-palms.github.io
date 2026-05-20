@@ -628,19 +628,13 @@
         return currentYear;
     }
 
-    function getSkinSeasonNotice(targetYear, metadata = {}) {
+    function getSkinSeasonNotice(targetYear) {
         const currentYear = new Date().getFullYear();
         const now = new Date();
         const currentSeasonCutoff = new Date(currentYear, 7, 31, 23, 59, 59); // 31 Aug
 
-        const requiredStart = metadata.startDate
-            ? formatDateYYYYMMDDToDDMMYYYY(metadata.startDate)
-            : formatDateDDMMYYYY(new Date(targetYear - 1, 10, 1)); // Nov 1
-
-        const requiredEnd = metadata.endDate
-            ? formatDateYYYYMMDDToDDMMYYYY(metadata.endDate)
-            : formatDateDDMMYYYY(new Date(targetYear, 7, 31)); // Aug 31
-
+        const requiredStart = '01/11/YYYY';
+        const requiredEnd = '31/08/YYYY';
         const cutoffLabel = formatDateDDMMYYYY(currentSeasonCutoff);
 
         const isUsingPreviousCompleteSeason =
@@ -1063,21 +1057,14 @@
             if (thead) {
                 thead.innerHTML = `
                     <tr>
-                        <th>Period</th>
                         <th>Feature</th>
-                        <th>Records</th>
-                        <th>Final Value</th>
+                        <th>Value</th>
                     </tr>
                 `;
             }
 
             skinFeatureRows.forEach(item => {
                 if (!Object.prototype.hasOwnProperty.call(features, item.key)) return;
-
-                const periodDiag = diagnostics[item.periodKey] || {};
-                const records = Number.isFinite(Number(periodDiag.records))
-                    ? Number(periodDiag.records).toLocaleString()
-                    : '—';
 
                 const rawValue = features[item.key];
                 const numericValue = typeof rawValue === 'number'
@@ -1088,13 +1075,10 @@
                     ? `${Number.isInteger(numericValue) ? numericValue : numericValue.toFixed(2)} ${item.unit}`
                     : '—';
 
+                const label = `${item.periodLabel} - ${labels[item.key] || item.key}`;
+
                 const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${item.periodLabel}</td>
-                    <td>${labels[item.key] || item.key}</td>
-                    <td class="records-cell">${records}</td>
-                    <td class="feature-final-value">${formattedValue}</td>
-                `;
+                row.innerHTML = `<td>${label}</td><td>${formattedValue}</td>`;
                 tbody.appendChild(row);
             });
 
