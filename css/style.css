@@ -2034,3 +2034,24 @@ body {
   font-weight: 700;
   color: var(--text);
 }
+
+.shimmer-loading {
+    position: relative;
+    color: var(--text-secondary);
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .shimmer-loading {
+        background: linear-gradient(90deg, rgba(110, 106, 94, 0.35) 0%, rgba(110, 106, 94, 0.95) 50%, rgba(110, 106, 94, 0.35) 100%);
+        background-size: 200% 100%;
+        color: transparent;
+        -webkit-background-clip: text;
+        background-clip: text;
+        animation: shimmer-text 1.6s linear infinite;
+    }
+}
+
+@keyframes shimmer-text {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}

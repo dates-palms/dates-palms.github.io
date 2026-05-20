@@ -633,8 +633,8 @@
         const now = new Date();
         const currentSeasonCutoff = new Date(currentYear, 7, 31, 23, 59, 59); // 31 Aug
 
-        const requiredStart = '01/11/YYYY';
-        const requiredEnd = '31/08/YYYY';
+        const requiredStart = '01/11';
+        const requiredEnd = '31/08';
         const cutoffLabel = formatDateDDMMYYYY(currentSeasonCutoff);
 
         const isUsingPreviousCompleteSeason =
@@ -979,7 +979,8 @@
     }
 
     function buildFeatureTable(features, diagnostics = {}, metadata = {}) {
-        const tbody = $('#yield-feature-tbody') || $('#feature-tbody');
+        const preferResultsTable = state.activeModel === 'skin' || state.currentPage === 'results';
+        const tbody = preferResultsTable ? $('#feature-tbody') : ($('#yield-feature-tbody') || $('#feature-tbody'));
         if (!tbody) return;
 
         const table = tbody.closest('table');
