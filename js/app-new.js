@@ -3,7 +3,7 @@
 
     const IMS_API_TOKEN = 'API_KEY_VALUE';
     const DEFAULT_STATION_ID = 36;
-    const SKIN_MODEL_CLOUD_URL = 'https://us-central1-rsc-date-palm-lzp.cloudfunctions.net/predict_skin_separation';
+    const SKIN_MODEL_CLOUD_URL = 'https://predict-skin-separation-r4zfudsaiq-uc.a.run.app';
 
     const MODEL_CONFIGS = {
         yield: {
@@ -293,12 +293,30 @@
     }
 
     function updateAnalyzeButton() {
-        const skinButton = $('#btn-start-skin');
-        if (skinButton) {
-            skinButton.disabled = state.isLoadingWeather || state.isSkinWorkflowRunning;
-            skinButton.textContent = state.isLoadingWeather ? 'Loading...' : 'START';
+    const skinButton = $('#btn-start-skin');
+
+    if (skinButton) {
+
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const cutoff = new Date(currentYear, 4, 15); // May 15
+
+        const isBlocked = now < cutoff;
+
+        skinButton.disabled =
+            state.isLoadingWeather ||
+            state.isSkinWorkflowRunning ||
+            isBlocked;
+
+        if (isBlocked) {
+            skinButton.textContent = "Available after May 15";
+        } else {
+            skinButton.textContent =
+                state.isLoadingWeather ? "Loading..." : "START";
         }
     }
+}
+
 
     async function ensureStationsLoaded() {
         if (state.stationLoadPromise) {
@@ -387,38 +405,60 @@
     }
 
     async function startSkinPredictionWorkflow() {
-        if (state.isSkinWorkflowRunning) return;
 
-        state.isSkinWorkflowRunning = true;
-        state.weatherFeatures = null;
-        toggleSkinWorkflowPanel(true);
-        updateAnalyzeButton();
-        resetSkinWorkflowSteps();
+    // ✅ NEW — May 15 rule (block BEFORE workflow starts)
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const cutoff = new Date(currentYear, 4, 15, 23, 59, 59); // May 15
 
-        try {
-            updateSkinWorkflowStep(0, 'active');
-            await ensureStationsLoaded();
-            const selectedStation = syncDefaultStationSelection();
-            if (!selectedStation) {
-                throw new Error('No stations available for prediction.');
-            }
-
-            updateSkinWorkflowStep(1, 'active');
-            updateSkinWorkflowStep(2, 'active');
-            await runAnalysis('skin', { suppressToast: true, rethrow: true });
-            updateSkinWorkflowStep(1, 'done');
-            updateSkinWorkflowStep(2, 'done');
-            showToast('Prediction generated successfully.', 'success');
-            setTimeout(() => toggleSkinWorkflowPanel(false), 700);
-        } catch (err) {
-            const failedStep = state.weatherFeatures ? 2 : 1;
-            updateSkinWorkflowStep(failedStep, 'error');
-            showToast(err.message, 'error');
-        } finally {
-            state.isSkinWorkflowRunning = false;
-            updateAnalyzeButton();
-        }
+    if (now < cutoff) {
+        showToast(
+            "Please wait until May 15 to run the prediction. Climate data for the current season is not yet complete.",
+            "error"
+        );
+        return;
     }
+
+    if (state.isSkinWorkflowRunning) return;
+
+    state.isSkinWorkflowRunning = true;
+    state.weatherFeatures = null;
+
+    toggleSkinWorkflowPanel(true);
+    updateAnalyzeButton();
+    resetSkinWorkflowSteps();
+
+    try {
+        updateSkinWorkflowStep(0, 'active');
+
+        await ensureStationsLoaded();
+        const selectedStation = syncDefaultStationSelection();
+
+        if (!selectedStation) {
+            throw new Error('No stations available for prediction.');
+        }
+
+        updateSkinWorkflowStep(1, 'active');
+        updateSkinWorkflowStep(2, 'active');
+
+        await runAnalysis('skin', { suppressToast: true, rethrow: true });
+
+        updateSkinWorkflowStep(1, 'done');
+        updateSkinWorkflowStep(2, 'done');
+
+        showToast('Prediction generated successfully.', 'success');
+
+        setTimeout(() => toggleSkinWorkflowPanel(false), 700);
+
+    } catch (err) {
+        const failedStep = state.weatherFeatures ? 2 : 1;
+        updateSkinWorkflowStep(failedStep, 'error');
+        showToast(err.message, 'error');
+    } finally {
+        state.isSkinWorkflowRunning = false;
+        updateAnalyzeButton();
+    }
+}
 
     async function loadStations() {
         const select = $('#station-select');
@@ -531,39 +571,80 @@
         $('#feat-h-ripen').textContent = fmt(features.H_Ripening) + '%';
     }
 
-    function resolveSkinTargetYear() {
-        const currentYear = new Date().getFullYear();
-        const cutoff = new Date(currentYear, 7, 31, 23, 59, 59);
-        if (new Date() < cutoff) {
-            const usePrevious = window.confirm(
-                `Data for ${currentYear} may be incomplete before Aug 31. Click OK to use ${currentYear - 1}, or Cancel to keep ${currentYear}.`
-            );
-            return usePrevious ? currentYear - 1 : currentYear;
-        }
-        return currentYear;
+    function formatDateDDMMYYYY(date) {
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+}
+
+function resolveSkinTargetYear() {
+    const currentYear = new Date().getFullYear();
+    const cutoff = new Date(currentYear, 7, 31, 23, 59, 59); // 31 Aug
+
+    // Before Aug 31, current-season climate data is incomplete,
+    // so use the previous complete target year automatically.
+    if (new Date() < cutoff) {
+        return currentYear - 1;
     }
+
+    return currentYear;
+}
+
+function getSkinSeasonNotice(targetYear) {
+    const currentYear = new Date().getFullYear();
+    const now = new Date();
+    const currentSeasonCutoff = new Date(currentYear, 7, 31, 23, 59, 59); // 31 Aug
+
+    const requiredStart = new Date(targetYear - 1, 10, 1); // Nov 1
+    const requiredEnd = new Date(targetYear, 7, 31);       // Aug 31
+
+    const requiredStartLabel = formatDateDDMMYYYY(requiredStart);
+    const requiredEndLabel = formatDateDDMMYYYY(requiredEnd);
+    const cutoffLabel = formatDateDDMMYYYY(currentSeasonCutoff);
+
+    const isUsingPreviousCompleteSeason =
+        now < currentSeasonCutoff && targetYear === currentYear - 1;
+
+    if (isUsingPreviousCompleteSeason) {
+        return `Prediction requires meteorological data from ${requiredStartLabel} to ${requiredEndLabel}. Since today is before ${cutoffLabel}, the current season is not complete, so the system uses the previous complete season: ${targetYear}.`;
+    }
+
+    return `Prediction requires meteorological data from ${requiredStartLabel} to ${requiredEndLabel}.`;
+}
 
     async function requestSkinPrediction(stationId, targetYear) {
-        const response = await fetch(SKIN_MODEL_CLOUD_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ stationId, targetYear }),
+    const response = await fetch(SKIN_MODEL_CLOUD_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stationId, targetYear }),
+    });
+
+    const rawText = await response.text();
+
+    let payload = null;
+    try {
+        payload = JSON.parse(rawText);
+    } catch (err) {
+        console.error('Prediction service returned non-JSON response:', {
+            status: response.status,
+            statusText: response.statusText,
+            contentType: response.headers.get('content-type'),
+            bodyPreview: rawText.slice(0, 1000),
         });
 
-        let payload = null;
-        try {
-            payload = await response.json();
-        } catch (err) {
-            throw new Error('Invalid response from prediction service.');
-        }
-
-        if (!response.ok || !payload || payload.status === 'error') {
-            const message = payload && payload.message ? payload.message : 'Prediction service failed.';
-            throw new Error(message);
-        }
-
-        return payload;
+        throw new Error(
+            `Prediction service returned non-JSON response. HTTP ${response.status}. Check Cloud Run logs.`
+        );
     }
+
+    if (!response.ok || !payload || payload.status === 'error') {
+        const message = payload && payload.message ? payload.message : 'Prediction service failed.';
+        throw new Error(message);
+    }
+
+    return payload;
+}
 
     function normalizeSkinDistribution(prediction) {
         if (!prediction) return [];
@@ -603,11 +684,20 @@
                 const distribution = normalizeSkinDistribution(response.prediction);
                 const features = response.features || {};
                 const metadata = response.metadata || {};
+                const diagnostics = response.diagnostics || {};
+
                 metadata.targetYear = metadata.targetYear || targetYear;
+                metadata.seasonNotice = getSkinSeasonNotice(metadata.targetYear || targetYear);
 
                 state.weatherFeatures = features;
                 displayWeatherFeatures(features);
-                state.lastPrediction = { distribution, features, metadata };
+
+                state.lastPrediction = {
+                    distribution,
+                    features,
+                    metadata,
+                    diagnostics,
+                };
 
                 navigateTo('results');
                 if (!options.suppressToast) showToast('Prediction generated successfully.', 'success');
@@ -773,7 +863,7 @@
         const mean = result.meanYield;
         const std = result.stdYield;
         const features = result.features || {};
-        const metadata = result.metadata || {};
+        const diagnostics = result.diagnostics || {};
 
         const modelConfig = MODEL_CONFIGS[state.activeModel] || MODEL_CONFIGS.yield;
         title.textContent = modelConfig.title;
@@ -788,9 +878,22 @@
         if (windowLabel) {
             const startDate = metadata.startDate || '';
             const endDate = metadata.endDate || '';
-            windowLabel.textContent = state.activeModel === 'skin' && startDate && endDate
-                ? `${startDate} → ${endDate}`
-                : '—';
+
+            windowLabel.textContent =
+                state.activeModel === 'skin' && startDate && endDate
+                    ? `${startDate} → ${endDate}`
+                    : '—';
+        }
+
+        const noteEl = $('#result-data-window-note');
+        if (noteEl) {
+            if (state.activeModel === 'skin' && metadata.seasonNotice) {
+                noteEl.textContent = metadata.seasonNotice;
+                noteEl.style.display = 'block';
+            } else {
+                noteEl.textContent = '';
+                noteEl.style.display = 'none';
+            }
         }
 
         if (state.activeModel === 'skin') {
@@ -799,7 +902,7 @@
             distributionGrid.innerHTML = renderYieldResultCard(mean, std);
         }
 
-        buildFeatureTable(features);
+        buildFeatureTable(features, diagnostics, metadata);
     }
 
     function renderYieldResultCard(mean, std) {
@@ -828,48 +931,145 @@
         }).join('');
     }
 
-    function buildFeatureTable(features) {
-        // Prefer yield inline table if present, otherwise use global results table
-        const tbody = $('#yield-feature-tbody') || $('#feature-tbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
+    function buildFeatureTable(features, diagnostics = {}, metadata = {}) {
+    const tbody = $('#yield-feature-tbody') || $('#feature-tbody');
+    if (!tbody) return;
 
-        const labels = {
-            'Tree age': 'Tree Age (years)',
-            'year': 'Year',
-            'Thinning_Upper_Fruits Bunch-1': 'Upper Fruits/Bunch',
-            'Thinning_Center_Fruits Bunch-1': 'Center Fruits/Bunch',
-            'Thinning_Lower_Fruits Bunch-1': 'Lower Fruits/Bunch',
-            'Thinning_Bunches': 'Total Bunches',
-            'Thinning_Fruits Tree-1': 'Total Fruits/Tree',
-            'Coverage_Upper_Fruits Bunch-1': 'Coverage Upper Fruits/Bunch',
-            'Coverage_Center_Fruits Bunch-1': 'Coverage Center Fruits/Bunch',
-            'Coverage_Lower_Fruits Bunch-1': 'Coverage Lower Fruits/Bunch',
-            'Coverage_Bunches': 'Coverage Total Bunches',
-            'Coverage_Fruits Tree-1': 'Coverage Fruits/Tree',
-            'T_Inf_differentiation': 'Heat Hours (Differentiation)',
-            'T_Flowering': 'Heat Hours (Flowering)',
-            'T_Thinning': 'Heat Hours (Thinning)',
-            'H_Inf_differentiation': 'Avg Humidity (Differentiation)',
-            'H_Flowering': 'Avg Humidity (Flowering)',
-            'H_Thinning': 'Avg Humidity (Thinning)',
-            'E_Inf_differentiation': 'Evaporation (Differentiation)',
-            'E_Flowering': 'Evaporation (Flowering)',
-            'E_Thinning': 'Evaporation (Thinning)',
-            'E_Ripening': 'Evaporation (Ripening)',
-            'H_June_Drop': 'Avg Humidity (June Drop)',
-            'E_Growth': 'Evaporation (Growth)',
-            'H_Ripening': 'Avg Humidity (Ripening)',
-        };
+    const table = tbody.closest('table');
+    const thead = table ? table.querySelector('thead') : null;
 
-        Object.entries(features).forEach(([key, value]) => {
+    tbody.innerHTML = '';
+
+    const labels = {
+        'Tree age': 'Tree Age (years)',
+        'year': 'Year',
+        'Thinning_Upper_Fruits Bunch-1': 'Upper Fruits/Bunch',
+        'Thinning_Center_Fruits Bunch-1': 'Center Fruits/Bunch',
+        'Thinning_Lower_Fruits Bunch-1': 'Lower Fruits/Bunch',
+        'Thinning_Bunches': 'Total Bunches',
+        'Thinning_Fruits Tree-1': 'Total Fruits/Tree',
+        'Coverage_Upper_Fruits Bunch-1': 'Coverage Upper Fruits/Bunch',
+        'Coverage_Center_Fruits Bunch-1': 'Coverage Center Fruits/Bunch',
+        'Coverage_Lower_Fruits Bunch-1': 'Coverage Lower Fruits/Bunch',
+        'Coverage_Bunches': 'Coverage Total Bunches',
+        'Coverage_Fruits Tree-1': 'Coverage Fruits/Tree',
+
+        'T_Inf_differentiation': 'Heat Hours',
+        'E_Inf_differentiation': 'Evaporation',
+        'E_Growth': 'Evaporation',
+        'H_June_Drop': 'Avg Humidity',
+        'E_Ripening': 'Evaporation',
+        'H_Ripening': 'Avg Humidity',
+    };
+
+    const skinFeatureRows = [
+        {
+            key: 'T_Inf_differentiation',
+            periodKey: 'Inf_differentiation',
+            periodLabel: 'Differentiation (Nov–Feb)',
+            unit: 'hours',
+        },
+        {
+            key: 'E_Inf_differentiation',
+            periodKey: 'Inf_differentiation',
+            periodLabel: 'Differentiation (Nov–Feb)',
+            unit: 'mm',
+        },
+        {
+            key: 'E_Growth',
+            periodKey: 'Growth',
+            periodLabel: 'Growth (May–Jul)',
+            unit: 'mm',
+        },
+        {
+            key: 'H_June_Drop',
+            periodKey: 'June_Drop',
+            periodLabel: 'June Drop (Jun)',
+            unit: '%',
+        },
+        {
+            key: 'E_Ripening',
+            periodKey: 'Ripening',
+            periodLabel: 'Ripening (Aug)',
+            unit: 'mm',
+        },
+        {
+            key: 'H_Ripening',
+            periodKey: 'Ripening',
+            periodLabel: 'Ripening (Aug)',
+            unit: '%',
+        },
+    ];
+
+    const isSkinResults =
+        state.activeModel === 'skin'
+        && features
+        && Object.prototype.hasOwnProperty.call(features, 'E_Ripening');
+
+    if (isSkinResults) {
+        if (thead) {
+            thead.innerHTML = `
+                <tr>
+                    <th>Period</th>
+                    <th>Feature</th>
+                    <th>Records</th>
+                    <th>Final Value</th>
+                </tr>
+            `;
+        }
+
+        skinFeatureRows.forEach(item => {
+            if (!Object.prototype.hasOwnProperty.call(features, item.key)) return;
+
+            const periodDiag = diagnostics[item.periodKey] || {};
+            const records = Number.isFinite(Number(periodDiag.records))
+                ? Number(periodDiag.records).toLocaleString()
+                : '—';
+
+            const rawValue = features[item.key];
+            const numericValue = typeof rawValue === 'number'
+                ? rawValue
+                : Number(rawValue);
+
+            const formattedValue = Number.isFinite(numericValue)
+                ? `${Number.isInteger(numericValue) ? numericValue : numericValue.toFixed(2)} ${item.unit}`
+                : '—';
+
             const row = document.createElement('tr');
-            const label = labels[key] || key;
-            const formatted = typeof value === 'number' ? (Number.isInteger(value) ? value : value.toFixed(2)) : value;
-            row.innerHTML = `<td>${label}</td><td>${formatted}</td>`;
+            row.innerHTML = `
+                <td>${item.periodLabel}</td>
+                <td>${labels[item.key] || item.key}</td>
+                <td class="records-cell">${records}</td>
+                <td class="feature-final-value">${formattedValue}</td>
+            `;
             tbody.appendChild(row);
         });
+
+        return;
     }
+
+    // Default/yield behavior: two-column table.
+    if (thead) {
+        thead.innerHTML = `
+            <tr>
+                <th>Feature</th>
+                <th>Value</th>
+            </tr>
+        `;
+    }
+
+    Object.entries(features || {}).forEach(([key, value]) => {
+        const row = document.createElement('tr');
+        const label = labels[key] || key;
+        const formatted =
+            typeof value === 'number'
+                ? (Number.isInteger(value) ? value : value.toFixed(2))
+                : value;
+
+        row.innerHTML = `<td>${label}</td><td>${formatted}</td>`;
+        tbody.appendChild(row);
+    });
+}
 
     function renderInlineYieldResults(mean, std, features) {
         const pane = $('#yield-results-pane');

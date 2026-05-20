@@ -2010,3 +2010,27 @@ body {
 #page-yield #tab-generation .form-group {
     margin-bottom: 4px;
 }
+.data-window-note {
+  margin: 12px 0 18px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(45, 106, 79, 0.07);
+  border: 1px solid rgba(45, 106, 79, 0.16);
+  color: var(--primary-dark);
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+
+.data-window-note strong {
+  font-weight: 700;
+}
+
+.feature-table td.records-cell {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.feature-table td.feature-final-value {
+  font-weight: 700;
+  color: var(--text);
+}
