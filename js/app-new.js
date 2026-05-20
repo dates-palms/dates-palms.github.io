@@ -746,6 +746,8 @@
                 displayWeatherFeatures(features);
                 state.lastPrediction = { distribution, features, metadata, diagnostics };
 
+                await delay(10000);
+
                 navigateTo('results');
                 if (!options.suppressToast) showToast('Prediction generated successfully.', 'success');
                 return true;
