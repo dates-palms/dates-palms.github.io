@@ -1480,6 +1480,63 @@ body {
     letter-spacing: 0.07em;
 }
 
+.distribution-grid.distribution-grid-bars {
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.distribution-row {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    box-shadow: var(--shadow-sm);
+}
+
+.distribution-row-value {
+    font-family: var(--font-head);
+    font-size: 31px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    line-height: 1;
+    text-align: left;
+    letter-spacing: 0.01em;
+}
+
+.distribution-row-main {
+    display: grid;
+    gap: 7px;
+}
+
+.distribution-row-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.distribution-progress {
+    width: 100%;
+    height: 15px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(242, 237, 227, 0.92) 0%, rgba(228, 221, 208, 0.9) 100%);
+    border: 1px solid rgba(228, 221, 208, 0.95);
+}
+
+.distribution-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    transition: width 0.5s ease;
+}
+
 .result-card-title {
     font-size: 10.5px;
     text-transform: uppercase;
@@ -1925,6 +1982,13 @@ body {
     .skin-workflow     { padding: 12px; }
     .workflow-step     { align-items: flex-start; }
     .workflow-step-state { margin-top: 2px; }
+    .distribution-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .distribution-row-value {
+        font-size: 26px;
+    }
 }
 
 @media (max-width: 800px) {

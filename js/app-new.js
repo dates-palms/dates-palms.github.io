@@ -641,7 +641,7 @@
             now < currentSeasonCutoff && targetYear === currentYear - 1;
 
         if (isUsingPreviousCompleteSeason) {
-            return `Prediction requires meteorological data from ${requiredStart} to ${requiredEnd}. Since today is before ${cutoffLabel}, the current season is not complete, so the system uses the previous complete season: ${targetYear}.`;
+            return `Prediction requires meteorological data from ${requiredStart} to ${requiredEnd}. As the current season is not yet complete (before <strong>${cutoffLabel}</strong>), the system uses the previous completed season: <strong>${targetYear}</strong>.`;
         }
 
         return `Prediction requires meteorological data from ${requiredStart} to ${requiredEnd}.`;
@@ -937,7 +937,7 @@
         const noteEl = getOrCreateDataWindowNoteElement();
         if (noteEl) {
             if (state.activeModel === 'skin' && metadata.seasonNotice) {
-                noteEl.textContent = metadata.seasonNotice;
+                noteEl.innerHTML = metadata.seasonNotice;
                 noteEl.style.display = 'block';
             } else {
                 noteEl.textContent = '';
@@ -945,6 +945,7 @@
             }
         }
 
+        distributionGrid.classList.toggle('distribution-grid-bars', state.activeModel === 'skin');
         if (state.activeModel === 'skin') {
             distributionGrid.innerHTML = renderDistributionCards(result.distribution);
         } else {
@@ -969,12 +970,18 @@
             return '';
         }
         return distribution.map(item => {
-            const label = item.label || item.range || '—';
+            const label = item.label || item.range || '-';
             const value = typeof item.value === 'number' ? item.value : Number(item.value) || 0;
+            const clampedValue = Math.max(0, Math.min(100, value));
             return `
-            <div class="distribution-card">
-                <div class="distribution-value">${value.toFixed(1)}%</div>
-                <div class="distribution-label">${label}</div>
+            <div class="distribution-row">
+                <div class="distribution-row-value">${value.toFixed(1)}%</div>
+                <div class="distribution-row-main">
+                    <div class="distribution-row-label">${label}</div>
+                    <div class="distribution-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${clampedValue.toFixed(1)}" aria-label="${label}">
+                        <div class="distribution-progress-fill" style="width:${clampedValue.toFixed(1)}%"></div>
+                    </div>
+                </div>
             </div>
         `;
         }).join('');
@@ -1145,3 +1152,4 @@
     }
 
 })();
+
