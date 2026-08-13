@@ -1,6 +1,6 @@
 # Tree Yield (kg) — Architecture Notes
 
-# Tree Yield (kg) — הסבר מבנה והרצה
+# כל החישוב האלגוריתמי ועיבוד הנתונים המטאורולוגים הועברו לקוד בצד שרת כדי להתמודד עם חסימות CORS ותקשורת מאובטחת עם מפתח בצד שרת מול השמ"ט 
 
 מסמך זה מתמקד רק בזרימת החיזוי של Tree Yield (kg).
 This document focuses only on the Tree Yield (kg) prediction flow.
