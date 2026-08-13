@@ -1,8 +1,6 @@
 /**
  * Data Processor
- * Translates data_processor.py logic to JavaScript.
- * Includes weather data processing (Penman-Monteith, degree hours, period aggregation)
- * and builds the 16-feature input vector for the XGBoost model.
+ ****** MOVED TO SERVER SIDE - THIS JS IS NOT IN USE ANYMORE *****
  */
 class DataProcessor {
 
